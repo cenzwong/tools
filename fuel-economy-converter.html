@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fuel Economy Converter • L/100km ⇄ mpg (UK/US)</title>
+  <meta name="description" content="Instantly convert between L/100km, mpg (UK), mpg (US), and km/L. 100% client‑side, perfect for GitHub Pages." />
+  <style>
+    :root{
+      --bg:#0b1020; --card:#121a34; --muted:#98a2b3; --text:#e6e9ef; --accent:#7c3aed; --accent-2:#22c55e; --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:radial-gradient(1200px 700px at 80% -20%, #1d2452 0%, rgba(29,36,82,0) 60%), var(--bg);color:var(--text);font:16px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
+    .wrap{max-width:920px;margin:32px auto;padding:0 16px}
+    .head{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{font-size:28px;margin:0;letter-spacing:.2px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:20px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+    label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px 2px}
+    .input{display:flex;align-items:center;gap:8px;background:#0f1630;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px}
+    .input input{flex:1;appearance:textfield;background:transparent;border:0;outline:none;color:var(--text);font-size:18px}
+    .unit{font-variant-numeric:tabular-nums;color:#cbd5e1;font-size:13px}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    button{cursor:pointer;border:1px solid rgba(255,255,255,.12);background:#0f1630;color:var(--text);padding:10px 14px;border-radius:12px;font-size:14px}
+    button.primary{background:linear-gradient(90deg,var(--accent),#3b82f6);border-color:transparent}
+    button.ghost{background:transparent}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+    .pill{font-size:12px;color:#e2e8f0;background:#0a122a;border:1px solid rgba(255,255,255,.08);padding:6px 10px;border-radius:999px}
+    .help{color:#aab4c5}
+    .eq{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; background:#0f1630;border:1px solid rgba(255,255,255,.08);padding:10px;border-radius:10px}
+    .footer{opacity:.8;text-align:center;margin:18px 0 8px}
+    .notice{display:flex;gap:10px;align-items:flex-start;margin-top:8px;color:#e5e7eb}
+    .notice b{color:#fff}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <h1>Fuel Economy Converter</h1>
+      <div class="row">
+        <span class="pill">L/100km ⇄ mpg (UK/US) ⇄ km/L</span>
+        <button id="share" title="Copy link with current values">Share</button>
+      </div>
+    </div>
+
+    <div class="card" role="group" aria-labelledby="converter">
+      <div class="grid">
+        <div>
+          <label for="l100">Litres per 100 km</label>
+          <div class="input"><input id="l100" inputmode="decimal" placeholder="e.g. 6.2" aria-describedby="l100hint" />
+            <span class="unit">L/100km</span></div>
+          <div id="l100hint" class="help">Lower is better. Primary input.</div>
+        </div>
+        <div>
+          <label for="kml">Kilometres per litre</label>
+          <div class="input"><input id="kml" inputmode="decimal" placeholder="auto" />
+            <span class="unit">km/L</span></div>
+        </div>
+        <div>
+          <label for="mpguk">Miles per gallon (UK)</label>
+          <div class="input"><input id="mpguk" inputmode="decimal" placeholder="auto" />
+            <span class="unit">mpg (UK)</span></div>
+        </div>
+        <div>
+          <label for="mpgus">Miles per gallon (US)</label>
+          <div class="input"><input id="mpgus" inputmode="decimal" placeholder="auto" />
+            <span class="unit">mpg (US)</span></div>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="primary" id="round2">Round to 1 dp</button>
+        <button class="ghost" id="round3">Round to 2 dp</button>
+        <button class="ghost" id="clear">Clear</button>
+      </div>
+
+      <div class="notice">
+        <div>ℹ️</div>
+        <div>
+          <b>Formulas</b>
+          <div class="eq">mpg(UK) = 282.481 ÷ L/100km &nbsp;&nbsp;•&nbsp;&nbsp; mpg(US) = 235.215 ÷ L/100km &nbsp;&nbsp;•&nbsp;&nbsp; km/L = 100 ÷ L/100km</div>
+          <div class="help">UK gallon = 4.54609 L, US gallon = 3.78541 L. Calculations are exact; only display rounding is applied.</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="footer">Made with ❤️ – fully client‑side. Safe to host on GitHub Pages.</p>
+  </div>
+
+  <script>
+    // Constants
+    const UK_FACTOR = 282.481; // exact based on 1609.344 m/mile and 4.54609 L/UK gal
+    const US_FACTOR = 235.215; // exact based on 3.78541 L/US gal
+
+    // Elements
+    const el = {
+      l100: document.getElementById('l100'),
+      kml: document.getElementById('kml'),
+      mpguk: document.getElementById('mpguk'),
+      mpgus: document.getElementById('mpgus'),
+      round1: document.getElementById('round2'),
+      round2: document.getElementById('round3'),
+      clear: document.getElementById('clear'),
+      share: document.getElementById('share'),
+    };
+
+    let dp = 1; // default rounding
+
+    function toNumber(v){
+      if (v === null || v === undefined) return NaN;
+      const s = (''+v).trim().replace(/,/g,'');
+      if (!s) return NaN;
+      return Number(s);
+    }
+
+    function fmt(x){
+      if(!isFinite(x)) return '';
+      return x.toFixed(dp);
+    }
+
+    // Core conversion, given any one field
+    function fromL100(l100){
+      if(!isFinite(l100) || l100 <= 0){ fill('', '', '', ''); return; }
+      const mpgUK = UK_FACTOR / l100;
+      const mpgUS = US_FACTOR / l100;
+      const kml = 100 / l100;
+      fill(l100, kml, mpgUK, mpgUS);
+    }
+
+    function fromKml(kml){
+      if(!isFinite(kml) || kml <= 0){ fill('', '', '', ''); return; }
+      const l100 = 100 / kml;
+      fromL100(l100);
+    }
+
+    function fromMpgUK(m){
+      if(!isFinite(m) || m <= 0){ fill('', '', '', ''); return; }
+      const l100 = UK_FACTOR / m;
+      fromL100(l100);
+    }
+
+    function fromMpgUS(m){
+      if(!isFinite(m) || m <= 0){ fill('', '', '', ''); return; }
+      const l100 = US_FACTOR / m;
+      fromL100(l100);
+    }
+
+    function fill(l100, kml, mpgUK, mpgUS){
+      el.l100.value = fmt(l100);
+      el.kml.value = fmt(kml);
+      el.mpguk.value = fmt(mpgUK);
+      el.mpgus.value = fmt(mpgUS);
+      updateQueryParams(l100);
+    }
+
+    // Wire events with debounce for nicer typing
+    let t;
+    function onInput(handler){
+      return (e)=>{ clearTimeout(t); t = setTimeout(()=> handler(toNumber(e.target.value)), 80); };
+    }
+
+    el.l100.addEventListener('input', onInput(fromL100));
+    el.kml.addEventListener('input', onInput(fromKml));
+    el.mpguk.addEventListener('input', onInput(fromMpgUK));
+    el.mpgus.addEventListener('input', onInput(fromMpgUS));
+
+    el.round1.addEventListener('click', ()=>{ dp = 1; el.round1.classList.add('primary'); el.round2.classList.remove('primary'); sync(); });
+    el.round2.addEventListener('click', ()=>{ dp = 2; el.round2.classList.add('primary'); el.round1.classList.remove('primary'); sync(); });
+    el.clear.addEventListener('click', ()=>{ fill('', '', '', ''); history.replaceState({}, '', location.pathname); });
+
+    // Deep‑linking: ?l100=6.2 or ?mpguk=45.6 etc.
+    function sync(){
+      const lval = toNumber(el.l100.value);
+      if(isFinite(lval) && lval>0){ fromL100(lval); return; }
+      const kval = toNumber(el.kml.value);
+      if(isFinite(kval) && kval>0){ fromKml(kval); return; }
+      const uval = toNumber(el.mpguk.value);
+      if(isFinite(uval) && uval>0){ fromMpgUK(uval); return; }
+      const sval = toNumber(el.mpgus.value);
+      if(isFinite(sval) && sval>0){ fromMpgUS(sval); return; }
+      // none valid
+      fill('', '', '', '');
+    }
+
+    function updateQueryParams(l100){
+      if(!isFinite(l100) || l100<=0) return;
+      const url = new URL(location.href);
+      url.searchParams.set('l100', (Math.round(l100*1000)/1000).toString());
+      history.replaceState({}, '', url);
+    }
+
+    // Share button copies the URL with current state
+    el.share.addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText(location.href);
+        toast('Link copied!');
+      }catch(e){ toast('Could not copy, select the address bar instead.'); }
+    });
+
+    function toast(msg){
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.style.position='fixed';
+      t.style.bottom='20px';
+      t.style.left='50%';
+      t.style.transform='translateX(-50%)';
+      t.style.background='rgba(14,23,55,.95)';
+      t.style.border='1px solid rgba(255,255,255,.12)';
+      t.style.padding='10px 14px';
+      t.style.borderRadius='12px';
+      t.style.zIndex='9999';
+      document.body.appendChild(t);
+      setTimeout(()=> t.remove(), 1400);
+    }
+
+    // Init from query string if present
+    const params = new URLSearchParams(location.search);
+    if(params.has('l100')){
+      const l = toNumber(params.get('l100'));
+      if(isFinite(l) && l>0){ fromL100(l); }
+    }
+  </script>
+</body>
+</html>
