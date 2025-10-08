@@ -1,7 +1,7 @@
 # tools
 ChatGPT generated tools
 
-# Prompt Samplr
+# Prompt Sample
 ```
 
 # Master Prompt — Single-File Tool for GitHub Pages
