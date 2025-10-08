@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fuel Trip Cost Calculator</title>
+<meta name="description" content="Estimate fuel needed and cost for a trip using L/100km or MPG (UK/US)." />
+<link rel="icon" href="data:,">
+<style>
+  :root{--max:880px}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Arial,sans-serif;background:#0b0b10;color:#e9e9ef}
+  header{padding:18px 16px;border-bottom:1px solid #20202a;background:linear-gradient(180deg,#121324,#0f101b)}
+  h1{margin:0 0 6px;font-size:clamp(20px,4vw,28px)}
+  main{max-width:var(--max);margin:0 auto;padding:18px 16px 32px}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px}
+  @media (min-width:820px){ .grid{grid-template-columns:1fr 1fr} }
+  .card{border:1px solid #232332;background:linear-gradient(180deg,#121324,#0f101b);padding:14px;border-radius:16px}
+  .row{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:center;margin:8px 0}
+  label{opacity:.9}
+  input,select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #2c2c3a;background:#11121a;color:#e9e9ef}
+  .muted{opacity:.75}
+  .out{font-size:18px;line-height:1.5}
+  .inline{display:flex;gap:8px;flex-wrap:wrap}
+  .hint{font-size:12px;opacity:.7;margin-top:6px}
+  .footer{margin-top:10px;opacity:.75}
+  .btn{padding:10px 14px;border-radius:12px;border:1px solid #2c2c3a;background:#151626;color:#e9e9ef;cursor:pointer}
+  .btn:hover{background:#1b1c2e}
+</style>
+</head>
+<body>
+<header>
+  <h1>⛽ Fuel Trip Cost Calculator</h1>
+  <div class="muted">Distance in km/mi · Economy in L/100km or MPG (UK/US) · Price per litre or per gallon.</div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card" aria-labelledby="trip">
+      <h2 id="trip" style="margin:0 0 10px;font-size:18px">Trip & Vehicle</h2>
+
+      <div class="row">
+        <label for="distance">Distance</label>
+        <div class="inline" style="flex-wrap:nowrap">
+          <input id="distance" type="number" min="0" step="0.1" placeholder="e.g. 150" />
+          <select id="distanceUnit">
+            <option value="km">km</option>
+            <option value="mi">miles</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="economyValue">Fuel economy</label>
+        <div class="inline" style="flex-wrap:nowrap">
+          <input id="economyValue" type="number" min="0" step="0.1" placeholder="e.g. 6.5 or 45" />
+          <select id="economyUnit">
+            <option value="L100">L/100km</option>
+            <option value="MPG_UK">MPG (UK)</option>
+            <option value="MPG_US">MPG (US)</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint">Tip: Lower is better for L/100km; higher is better for MPG.</div>
+    </section>
+
+    <section class="card" aria-labelledby="price">
+      <h2 id="price" style="margin:0 0 10px;font-size:18px">Fuel Price</h2>
+
+      <div class="row">
+        <label for="priceValue">Price</label>
+        <div class="inline" style="flex-wrap:nowrap">
+          <input id="priceValue" type="number" min="0" step="0.001" placeholder="e.g. 1.75" />
+          <select id="priceUnit">
+            <option value="perL">per litre</option>
+            <option value="perGalUK">per UK gallon</option>
+            <option value="perGalUS">per US gallon</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="currency">Currency</label>
+        <input id="currency" type="text" maxlength="6" placeholder="e.g. GBP, EUR, USD" />
+      </div>
+
+      <div class="row">
+        <label for="roundTo">Round to</label>
+        <select id="roundTo">
+          <option value="0">No rounding</option>
+          <option value="2" selected>2 decimals</option>
+          <option value="1">1 decimal</option>
+          <option value="3">3 decimals</option>
+        </select>
+      </div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:14px" aria-labelledby="result">
+    <h2 id="result" style="margin:0 0 10px;font-size:18px">Results</h2>
+    <div class="out" id="outputs">
+      <div>Total fuel needed: <strong id="fuelLitres">–</strong> L (<span id="fuelGallonsUK">–</span> UK gal · <span id="fuelGallonsUS">–</span> US gal)</div>
+      <div>Total cost: <strong id="totalCost">–</strong></div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="share">Copy sharable link</button>
+      <span class="hint">All calculations are done locally in your browser.</span>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  // Constants
+  const L_PER_UK_GAL = 4.54609;
+  const L_PER_US_GAL = 3.78541;
+  const KM_PER_MI    = 1.609344;
+
+  // Elements
+  const el = id => document.getElementById(id);
+  const distance      = el('distance');
+  const distanceUnit  = el('distanceUnit');
+  const economyValue  = el('economyValue');
+  const economyUnit   = el('economyUnit');
+  const priceValue    = el('priceValue');
+  const priceUnit     = el('priceUnit');
+  const currency      = el('currency');
+  const roundTo       = el('roundTo');
+  const fuelLitres    = el('fuelLitres');
+  const fuelGallonsUK = el('fuelGallonsUK');
+  const fuelGallonsUS = el('fuelGallonsUS');
+  const totalCost     = el('totalCost');
+  const shareBtn      = el('share');
+
+  // Helpers
+  const toNumber = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : NaN;
+  };
+
+  function round(n, dp){
+    if (!Number.isFinite(n)) return n;
+    const p = Math.pow(10, dp);
+    return Math.round(n * p) / p;
+  }
+
+  function litresUsed(distVal, distUnit, econVal, econUnit){
+    if (!Number.isFinite(distVal) || !Number.isFinite(econVal) || distVal <= 0 || econVal <= 0) return NaN;
+
+    // Normalize distance to km
+    const km = distUnit === 'mi' ? distVal * KM_PER_MI : distVal;
+
+    // Convert economy to L per km
+    let litresPerKm;
+    if (econUnit === 'L100'){
+      litresPerKm = econVal / 100; // L / km
+    } else if (econUnit === 'MPG_UK'){
+      const ukGalPerMile = 1 / econVal; // gal/mile
+      const litresPerMile = ukGalPerMile * L_PER_UK_GAL;
+      litresPerKm = litresPerMile / KM_PER_MI;
+    } else { // MPG_US
+      const usGalPerMile = 1 / econVal;
+      const litresPerMile = usGalPerMile * L_PER_US_GAL;
+      litresPerKm = litresPerMile / KM_PER_MI;
+    }
+
+    return km * litresPerKm; // total litres
+  }
+
+  function pricePerLitre(pVal, pUnit){
+    if (!Number.isFinite(pVal) || pVal < 0) return NaN;
+    if (pUnit === 'perL') return pVal;
+    if (pUnit === 'perGalUK') return pVal / L_PER_UK_GAL;
+    if (pUnit === 'perGalUS') return pVal / L_PER_US_GAL;
+    return NaN;
+  }
+
+  function fmtMoney(n, code, dp){
+    if (!Number.isFinite(n)) return '–';
+    const c = (code || '').trim() || 'GBP';
+    try {
+      return new Intl.NumberFormat(undefined, { style:'currency', currency: c, maximumFractionDigits: dp, minimumFractionDigits: dp }).format(n);
+    } catch {
+      // Fallback if an unknown currency code is provided
+      return `${c} ${n.toFixed(dp)}`;
+    }
+  }
+
+  function update(){
+    const d  = toNumber(distance.value);
+    const eu = economyUnit.value;
+    const ev = toNumber(economyValue.value);
+    const du = distanceUnit.value;
+
+    const pv = toNumber(priceValue.value);
+    const pu = priceUnit.value;
+    const cur= currency.value.trim() || 'GBP';
+    const dp = parseInt(roundTo.value, 10);
+
+    const L = litresUsed(d, du, ev, eu);
+    const pPerL = pricePerLitre(pv, pu);
+
+    const UKgal = Number.isFinite(L) ? (L / L_PER_UK_GAL) : NaN;
+    const USgal = Number.isFinite(L) ? (L / L_PER_US_GAL) : NaN;
+    const cost  = (Number.isFinite(L) && Number.isFinite(pPerL)) ? L * pPerL : NaN;
+
+    fuelLitres.textContent    = Number.isFinite(L) ? round(L, 3).toFixed(3) : '–';
+    fuelGallonsUK.textContent = Number.isFinite(UKgal) ? round(UKgal, 3).toFixed(3) : '–';
+    fuelGallonsUS.textContent = Number.isFinite(USgal) ? round(USgal, 3).toFixed(3) : '–';
+    totalCost.textContent     = Number.isFinite(cost) ? fmtMoney(cost, cur, dp) : '–';
+
+    // Update URL hash for sharing
+    const params = new URLSearchParams({
+      d: distance.value, du,
+      ev: economyValue.value, eu,
+      pv: priceValue.value, pu,
+      c: cur, dp: String(dp)
+    });
+    history.replaceState(null, '', '#' + params.toString());
+  }
+
+  function fromHash(){
+    if (!location.hash) return;
+    const q = new URLSearchParams(location.hash.slice(1));
+    if (q.has('d'))  distance.value = q.get('d');
+    if (q.has('du')) distanceUnit.value = q.get('du');
+    if (q.has('ev')) economyValue.value = q.get('ev');
+    if (q.has('eu')) economyUnit.value = q.get('eu');
+    if (q.has('pv')) priceValue.value = q.get('pv');
+    if (q.has('pu')) priceUnit.value = q.get('pu');
+    if (q.has('c'))  currency.value = q.get('c');
+    if (q.has('dp')) roundTo.value = q.get('dp');
+  }
+
+  // Wire up events
+  [distance, distanceUnit, economyValue, economyUnit, priceValue, priceUnit, currency, roundTo]
+    .forEach(el => el.addEventListener('input', update));
+
+  shareBtn.addEventListener('click', async () => {
+    const url = location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      shareBtn.textContent = 'Link copied!';
+      setTimeout(()=> shareBtn.textContent = 'Copy sharable link', 1200);
+    } catch {
+      prompt('Copy this link:', url);
+    }
+  });
+
+  // Init
+  fromHash();
+  update();
+})();
+</script>
+</body>
+</html>
