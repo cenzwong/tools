@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-HK">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,7 +8,7 @@
 <style>
   :root{--max:1080px}
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Arial,"PingFang HK","Microsoft JhengHei",sans-serif;background:#0b0b10;color:#e9e9ef}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Arial,sans-serif;background:#0b0b10;color:#e9e9ef}
   header{position:sticky;top:0;z-index:10;backdrop-filter:blur(8px);background:rgba(11,11,16,.75);border-bottom:1px solid #20202a}
   .wrap{max-width:var(--max);margin:0 auto;padding:18px 16px}
   h1{margin:0;font-size:clamp(20px,4vw,28px)}
@@ -33,10 +33,10 @@
   <div class="wrap">
     <h1>🔧 Cenz Tools</h1>
     <div class="controls">
-      <input id="q" type="search" placeholder="搜尋工具名稱…" />
-      <button id="selectAll" type="button">全選</button>
-      <button id="clearSel" type="button">清除</button>
-      <button id="openSel" type="button">打開已選</button>
+      <input id="q" type="search" placeholder="Search tools…" />
+      <button id="selectAll" type="button">Select all</button>
+      <button id="clearSel" type="button">Clear</button>
+      <button id="openSel" type="button">Open selected</button>
       <a id="repoLink" class="linkbtn" target="_blank" rel="noopener">GitHub Repo</a>
     </div>
   </div>
@@ -44,22 +44,22 @@
 
 <main>
   <div class="wrap">
-    <div id="status" class="muted" style="margin:8px 0 14px;">載入中…</div>
+    <div id="status" class="muted" style="margin:8px 0 14px;">Loading…</div>
     <div id="list" class="grid" aria-live="polite"></div>
-    <div id="empty" class="empty" style="display:none">未找到任何 <code>tools/*.html</code>。</div>
+    <div id="empty" class="empty" style="display:none">No <code>tools/*.html</code> files found.</div>
   </div>
 </main>
 
 <script>
 (function(){
-  // 推斷 owner/repo（適用於 user/org Pages）。如你想固定，可手動填 owner/repo。
-  const host = location.hostname; // e.g. cenzwong.github.io
-  const owner = host.split(".")[0]; // cenzwong
-  const pathParts = location.pathname.split("/").filter(Boolean); // ["<repo>", ...]
-  const repo = pathParts[0] || "tools"; // repo 名
-  const basePath = "/" + repo + "/";    // "/tools/"
-  const toolsWebBase = basePath + "tools/"; // "/tools/tools/"
-  const api = `https://api.github.com/repos/${owner}/${repo}/contents/tools`;
+  // Hard-coded to your repo
+  const owner = "cenzwong";
+  const repo  = "tools";
+  const api   = `https://api.github.com/repos/${owner}/${repo}/contents/tools`;
+
+  // Project Pages base path: /<repo>/
+  const basePath = `/${repo}/`;
+  const webToolsBase = `${basePath}tools/`;
 
   const $list = document.getElementById('list');
   const $status = document.getElementById('status');
@@ -70,7 +70,12 @@
 
   const state = { items: [], filtered: [], selected: new Set() };
 
-  const pretty = s => s.replace(/\.html?$/i,'').replace(/[-_]/g,' ').replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase());
+  const toTitle = s => s
+    .replace(/\.html?$/i,'')
+    .replace(/[-_]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim()
+    .replace(/\b\w/g,c=>c.toUpperCase());
 
   function render(){
     const q = ($q.value||"").toLowerCase().trim();
@@ -87,9 +92,9 @@
           <input class="checkbox" type="checkbox" id="${id}" ${state.selected.has(it.path)?'checked':''}/>
           <div style="flex:1">
             <h3>${it.title} <span class="badge">${it.name}</span></h3>
-            <p class="muted">單檔工具頁</p>
+            <p class="muted">Single-file tool</p>
             <div class="toolsbar">
-              <a class="linkbtn" href="${it.href}" target="_blank" rel="noopener">開啟</a>
+              <a class="linkbtn" href="${it.href}" target="_blank" rel="noopener">Open</a>
               <a class="linkbtn" href="${it.raw}" target="_blank" rel="noopener">Raw</a>
             </div>
           </div>`;
@@ -99,14 +104,14 @@
         $list.appendChild(card);
       }
     }
-    $status.textContent = `${state.filtered.length} 個工具 · 已選 ${state.selected.size}`;
+    $status.textContent = `${state.filtered.length} tools · ${state.selected.size} selected`;
   }
 
   function inflate(files){
     const htmls = files.filter(f => f.type==='file' && /\.html?$/i.test(f.name) && !/^index\.html?$/i.test(f.name));
     state.items = htmls.map(f=>{
-      const title = pretty(f.name);
-      const href = toolsWebBase + encodeURIComponent(f.name);
+      const title = toTitle(f.name);
+      const href = webToolsBase + encodeURIComponent(f.name);
       const raw = f.download_url || (f.html_url ? f.html_url.replace('github.com','raw.githubusercontent.com').replace('/blob/','/') : '');
       return { name:f.name, title, path:f.path, href, raw };
     }).sort((a,b)=> a.title.localeCompare(b.title));
@@ -114,7 +119,7 @@
   }
 
   async function loadFromAPI(){
-    $status.textContent = "從 GitHub 讀取 tools/ …";
+    $status.textContent = "Loading tools/ from GitHub…";
     const res = await fetch(api, { headers: { 'Accept':'application/vnd.github+json' }});
     if(!res.ok) throw new Error(`GitHub API ${res.status}`);
     const data = await res.json();
@@ -124,7 +129,7 @@
   document.getElementById('selectAll').onclick = ()=>{ state.filtered.forEach(it=>state.selected.add(it.path)); render(); };
   document.getElementById('clearSel').onclick = ()=>{ state.selected.clear(); render(); };
   document.getElementById('openSel').onclick = ()=>{
-    if(state.selected.size===0) return alert("未選擇任何工具");
+    if(state.selected.size===0) return alert("No tools selected");
     for(const p of state.selected){
       const it = state.items.find(x=>x.path===p);
       if(it) window.open(it.href,'_blank','noopener');
@@ -133,7 +138,7 @@
   $q.addEventListener('input', render);
 
   loadFromAPI().catch(()=>{
-    $status.textContent = "載入失敗：請確認 repo 及 tools/ 目錄。";
+    $status.textContent = "Failed to load. Check the repo and the tools/ folder.";
     $empty.style.display="block";
   });
 })();
