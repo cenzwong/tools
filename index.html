@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cenz Tools – Index</title>
+  <meta name="description" content="List and launch tools in this repo" />
+  <link rel="icon" href="data:,">
+  <style>
+    :root { --max:1100px }
+    * { box-sizing: border-box }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans", Arial, "PingFang HK", "Microsoft JhengHei", sans-serif; background:#0b0b10; color:#e9e9ef }
+    header { position:sticky; top:0; z-index:10; backdrop-filter: blur(8px); background: rgba(11,11,16,.75); border-bottom:1px solid #20202a }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 18px 16px }
+    h1 { margin:0; font-size: clamp(20px, 4vw, 28px); letter-spacing:.3px }
+    .sub { opacity:.7; font-size: 14px; margin-top:4px }
+    .controls { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px }
+    input[type="search"]{ flex:1 1 260px; padding:10px 12px; border-radius:12px; border:1px solid #2c2c3a; background:#11121a; color:#e9e9ef; outline:none }
+    button, .linkbtn {
+      padding:10px 14px; border-radius:12px; border:1px solid #2c2c3a; background:#151626; color:#e9e9ef; cursor:pointer;
+    }
+    button:hover, .linkbtn:hover { background:#1b1c2e }
+    main { max-width: var(--max); margin: 10px auto 60px; padding:0 16px }
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:14px }
+    .card {
+      border:1px solid #232332; background:linear-gradient(180deg, #121324, #0f101b);
+      padding:14px; border-radius:16px; display:flex; gap:10px; align-items:flex-start
+    }
+    .card h3{ margin:0 0 6px; font-size:16px; line-height:1.2 }
+    .card p { margin:0; opacity:.75; font-size:13px }
+    .muted { opacity:.6 }
+    .toolsbar { display:flex; gap:8px; align-items:center; margin: 10px 0 0 }
+    .checkbox { margin-top:2px }
+    .footer { max-width:var(--max); margin:0 auto; padding:18px 16px; border-top:1px solid #20202a; opacity:.75; font-size:13px }
+    .empty { padding:20px; border:1px dashed #313146; border-radius:14px; text-align:center; }
+    a { color:#a7b6ff; text-decoration:none }
+    a:hover { text-decoration:underline }
+    .badge { font-size: 12px; padding: 2px 8px; border: 1px solid #30304a; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>🔧 Cenz Tools</h1>
+      <div class="sub">自動列出此 repo 內所有 HTML 工具頁，揀選並打開使用。</div>
+
+      <div class="controls">
+        <input id="q" type="search" placeholder="搜尋工具名稱或描述…" />
+        <button id="selectAll" type="button">全選</button>
+        <button id="clearSel" type="button">清除選擇</button>
+        <button id="openSel" type="button">打開已選（新分頁）</button>
+        <a class="linkbtn" id="viewRepo" href="https://github.com/cenzwong/tools" target="_blank" rel="noopener">GitHub Repo</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div id="status" class="muted" style="margin:8px 0 14px;">載入中…</div>
+      <div id="list" class="grid" aria-live="polite"></div>
+      <div id="empty" class="empty" style="display:none">未搵到工具。試試清除搜尋或檢查 repo 內是否有 <code>.html</code> 檔案。</div>
+    </div>
+  </main>
+
+  <div class="footer">
+    小貼士：此頁會直接讀 GitHub API。若 API 受限或私有 repo，請加入 <code>tools.json</code> 作後備（見下方註釋）。
+  </div>
+
+<script>
+(function(){
+  const owner = "cenzwong";
+  const repo  = "tools";
+  const api   = `https://api.github.com/repos/${owner}/${repo}/contents`;
+  const GHPagesBase = (new URL(window.location.href)).pathname.replace(/\/$/, ""); // e.g. /tools
+  const $list = document.getElementById('list');
+  const $status = document.getElementById('status');
+  const $empty = document.getElementById('empty');
+  const $q = document.getElementById('q');
+
+  const state = { items: [], filtered: [], selected: new Set() };
+
+  const niceName = (filename) => {
+    // convert "fuel-economy-converter.html" -> "Fuel Economy Converter"
+    return filename
+      .replace(/\.html?$/i,'')
+      .replace(/[-_]/g,' ')
+      .replace(/\s+/g,' ')
+      .trim()
+      .replace(/\b\w/g, c => c.toUpperCase());
+  };
+
+  const makeDesc = (name) => {
+    // simple heuristics; can extend with a manifest later
+    if (name.match(/fuel|mpg|km|l\/100/i)) return "油耗 / MPG 轉換器";
+    return "工具頁";
+  };
+
+  const render = () => {
+    const q = ($q.value||"").trim().toLowerCase();
+    state.filtered = state.items.filter(it => {
+      if (q === "") return true;
+      return it.name.toLowerCase().includes(q) || it.title.toLowerCase().includes(q);
+    });
+
+    $list.innerHTML = "";
+    if (state.filtered.length === 0) {
+      $empty.style.display = "block";
+    } else {
+      $empty.style.display = "none";
+      for (const it of state.filtered) {
+        const id = `chk_${it.name.replace(/\W/g,'_')}`;
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <input class="checkbox" type="checkbox" id="${id}" ${state.selected.has(it.path)?'checked':''} />
+          <div style="flex:1">
+            <h3>${it.title} <span class="badge">${it.name}</span></h3>
+            <p>${makeDesc(it.title)}</p>
+            <div class="toolsbar">
+              <a class="linkbtn" href="${it.href}" target="_blank" rel="noopener">開啟</a>
+              <a class="linkbtn" href="${it.raw}" target="_blank" rel="noopener">Raw</a>
+            </div>
+          </div>
+        `;
+        card.querySelector('input').addEventListener('change', (e)=>{
+          if (e.target.checked) state.selected.add(it.path);
+          else state.selected.delete(it.path);
+        });
+        $list.appendChild(card);
+      }
+    }
+    $status.textContent = `${state.filtered.length} 個工具可用 · 已選 ${state.selected.size}`;
+  };
+
+  const inflate = (files) => {
+    const htmls = files.filter(f => f.type === 'file' && /\.html?$/i.test(f.name) && !/^index\.html?$/i.test(f.name));
+    state.items = htmls.map(f => {
+      const title = niceName(f.name);
+      // 在 pages 上直接相對路徑可用；同時提供 raw 連結方便下載
+      const href = `${GHPagesBase ? GHPagesBase + '/' : ''}${f.name}`;
+      const raw = f.download_url || f.html_url?.replace('github.com','raw.githubusercontent.com').replace('/blob/','/');
+      return { name: f.name, title, path: f.path, href, raw };
+    }).sort((a,b)=> a.title.localeCompare(b.title));
+    render();
+  };
+
+  async function loadFromAPI() {
+    $status.textContent = "從 GitHub 讀取檔案清單…";
+    const res = await fetch(api, { headers: { 'Accept': 'application/vnd.github+json' }});
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const data = await res.json();
+    inflate(data);
+  }
+
+  async function loadFallback() {
+    // 可選：若你另外放 tools.json（簡單陣列），會喺 API 失敗時讀取
+    const res = await fetch('tools.json');
+    if (!res.ok) throw new Error('no fallback');
+    const data = await res.json();
+    const files = data.map(n => ({ type:'file', name:n, path:n, download_url: location.origin + location.pathname + n }));
+    inflate(files);
+  }
+
+  // wire up controls
+  document.getElementById('selectAll').onclick = () => {
+    state.filtered.forEach(it => state.selected.add(it.path));
+    render();
+  };
+  document.getElementById('clearSel').onclick = () => {
+    state.selected.clear(); render();
+  };
+  document.getElementById('openSel').onclick = () => {
+    if (state.selected.size === 0) return alert("未選擇任何工具");
+    for (const p of state.selected) {
+      const it = state.items.find(x => x.path === p);
+      if (it) window.open(it.href, '_blank', 'noopener');
+    }
+  };
+  $q.addEventListener('input', render);
+
+  // init
+  loadFromAPI().catch(async () => {
+    $status.textContent = "GitHub API 讀取失敗，嘗試後備清單…";
+    try { await loadFallback(); $status.textContent = "已用後備清單載入。"; }
+    catch { $status.textContent = "載入失敗：請檢查 repo 或網絡設定。"; }
+  });
+})();
+</script>
+</body>
+</html>
