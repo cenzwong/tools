@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google → Apple Maps Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+    .output {
+      margin-top: 20px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h2>🗺→🍎 Google Maps → Apple Maps Converter</h2>
+  <p>Paste your Google Maps link or use <code>?q=&lt;link&gt;&mode=api|redirect|ui</code></p>
+  <input id="googleLink" type="text" placeholder="https://www.google.com/maps/..." />
+  <button onclick="convertLink()">Convert</button>
+  <div id="result" class="output"></div>
+
+  <script>
+    function convertToAppleMap(gmapUrl) {
+      const url = new URL(gmapUrl);
+      let appleMap = "https://maps.apple.com/?";
+
+      // Try coordinates like @lat,long
+      const coordMatch = gmapUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (coordMatch) {
+        appleMap += `ll=${coordMatch[1]},${coordMatch[2]}`;
+      }
+      // Try query=?q=
+      else if (url.searchParams.has("q")) {
+        appleMap += `q=${encodeURIComponent(url.searchParams.get("q"))}`;
+      }
+      // Try /place/
+      else if (url.pathname.includes("/place/")) {
+        const place = decodeURIComponent(url.pathname.split("/place/")[1].split("/")[0]);
+        appleMap += `q=${encodeURIComponent(place)}`;
+      } else {
+        throw new Error("No recognizable place info in the Google Maps URL.");
+      }
+
+      return appleMap;
+    }
+
+    function convertLink() {
+      const input = document.getElementById("googleLink").value.trim();
+      const resultDiv = document.getElementById("result");
+      try {
+        const appleMap = convertToAppleMap(input);
+        resultDiv.innerHTML = `
+          ✅ <b>Apple Maps link:</b><br>
+          <a href="${appleMap}" target="_blank">${appleMap}</a>
+        `;
+      } catch (e) {
+        resultDiv.innerHTML = `❌ ${e.message}`;
+      }
+    }
+
+    // --- Handle REST modes ---
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("q");
+    const mode = (params.get("mode") || "ui").toLowerCase();
+
+    if (q) {
+      try {
+        const appleMap = convertToAppleMap(q);
+
+        if (mode === "redirect") {
+          // instantly go to Apple Maps
+          window.location.href = appleMap;
+        } else if (mode === "api") {
+          // JSON API output
+          document.body.innerHTML = `<pre>${JSON.stringify({ apple_map: appleMap }, null, 2)}</pre>`;
+        } else {
+          // UI mode (default)
+          document.getElementById("googleLink").value = q;
+          document.getElementById("result").innerHTML = `
+            ✅ <b>Apple Maps link:</b><br>
+            <a href="${appleMap}" target="_blank">${appleMap}</a>
+          `;
+        }
+      } catch (e) {
+        document.body.innerHTML = `<p>❌ ${e.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

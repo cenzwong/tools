@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("q")) {
+      try {
+        const gmap = params.get("q");
+        const url = new URL(gmap);
+        let appleMap = "https://maps.apple.com/?";
+
+        const coordMatch = gmap.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (coordMatch) appleMap += `ll=${coordMatch[1]},${coordMatch[2]}`;
+        else if (url.searchParams.has("q"))
+          appleMap += `q=${encodeURIComponent(url.searchParams.get("q"))}`;
+        else if (url.pathname.includes("/place/")) {
+          const place = decodeURIComponent(url.pathname.split("/place/")[1].split("/")[0]);
+          appleMap += `q=${encodeURIComponent(place)}`;
+        } else throw new Error();
+
+        // redirect
+        window.location.href = appleMap;
+      } catch {
+        document.body.innerText = "Invalid Google Maps link.";
+      }
+    } else {
+      document.body.innerText = "Usage: ?q=<google_maps_url>";
+    }
+  </script>
+</head>
+</html>
