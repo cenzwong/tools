@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Google → Apple Maps Converter</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
       color-scheme: dark;
@@ -12,7 +12,6 @@
       --accent: #58a6ff;
       --muted: #8b949e;
       --error: #f85149;
-      --success: #3fb950;
     }
     body {
       background: var(--bg);
@@ -38,7 +37,7 @@
     button:hover { background: #21262d; cursor: pointer; }
     pre {
       background: #161b22;
-      padding: 16px;
+      padding: 12px;
       border-radius: 6px;
       overflow-x: auto;
     }
@@ -49,93 +48,104 @@
 <body>
   <h2>🗺→🍎 Google Maps → Apple Maps Converter</h2>
   <p class="muted">
-    Paste your Google Maps link below or use
-    <code>?q=&lt;google_link&gt;&amp;mode=api|redirect|ui</code>  
+    Paste your Google Maps link or use
+    <code>?q=&lt;google_link&gt;&amp;mode=api|redirect|ui</code>
     (<a href="?help">help</a>)
   </p>
 
-  <input id="googleLink" type="text" placeholder="https://www.google.com/maps/..." />
+  <input id="googleLink" placeholder="https://www.google.com/maps/..." />
   <button onclick="convertLink()">Convert</button>
   <div id="result" class="output"></div>
 
   <script>
     function convertToAppleMap(gmapUrl) {
       const url = new URL(gmapUrl);
-      let appleMap = "https://maps.apple.com/?";
+      let apple = "https://maps.apple.com/?";
 
-      const coordMatch = gmapUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (coordMatch) appleMap += `ll=${coordMatch[1]},${coordMatch[2]}`;
-      else if (url.searchParams.has("q")) appleMap += `q=${encodeURIComponent(url.searchParams.get("q"))}`;
-      else if (url.pathname.includes("/place/")) {
+      // Prefer !3d...!4d... coordinates
+      const mPrecise = gmapUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+      if (mPrecise) {
+        const [_, lat, lng] = mPrecise;
+        const n = gmapUrl.match(/\/place\/([^/]+)/);
+        const name = n ? decodeURIComponent(n[1].replace(/\+/g, " ")) : "";
+        apple += `ll=${lat},${lng}`;
+        if (name) apple += `&q=${encodeURIComponent(name)}`;
+        return apple;
+      }
+
+      // Fallback: @lat,long
+      const mCenter = gmapUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (mCenter) return apple + `ll=${mCenter[1]},${mCenter[2]}`;
+
+      // Fallback: ?q=
+      if (url.searchParams.has("q"))
+        return apple + `q=${encodeURIComponent(url.searchParams.get("q"))}`;
+
+      // Fallback: /place/
+      if (url.pathname.includes("/place/")) {
         const place = decodeURIComponent(url.pathname.split("/place/")[1].split("/")[0]);
-        appleMap += `q=${encodeURIComponent(place)}`;
-      } else throw new Error("No recognizable location info in the Google Maps URL.");
+        return apple + `q=${encodeURIComponent(place)}`;
+      }
 
-      return appleMap;
+      throw new Error("No recognizable location info in Google Maps URL.");
     }
 
     function convertLink() {
       const input = document.getElementById("googleLink").value.trim();
       const resultDiv = document.getElementById("result");
       try {
-        const appleMap = convertToAppleMap(input);
+        const apple = convertToAppleMap(input);
         resultDiv.innerHTML = `
           ✅ <b>Apple Maps link:</b><br>
-          <a href="${appleMap}" target="_blank">${appleMap}</a>
-          <br><br>
-          <button onclick="navigator.clipboard.writeText('${appleMap}')">📋 Copy</button>
+          <a href="${apple}" target="_blank">${apple}</a><br><br>
+          <button onclick="navigator.clipboard.writeText('${apple}')">📋 Copy</button>
         `;
       } catch (e) {
         resultDiv.innerHTML = `❌ ${e.message}`;
       }
     }
 
-    // --- Built-in README / ?help ---
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("help")) {
+    const p = new URLSearchParams(window.location.search);
+    if (p.has("help")) {
       document.body.innerHTML = `
-        <h2>📘 Google → Apple Maps Converter Help</h2>
-        <p>This page converts a Google Maps URL into an Apple Maps URL.</p>
-        <h3>🧭 Usage</h3>
-        <pre>?q=&lt;google_maps_link&gt;&amp;mode=ui|api|redirect</pre>
-        <h3>⚙️ Examples</h3>
+        <h2>📘 Help</h2>
+        <p>This tool converts Google Maps URLs to Apple Maps URLs.</p>
+        <h3>Usage</h3>
+        <pre>?q=&lt;google_link&gt;&amp;mode=ui|api|redirect</pre>
+        <h3>Examples</h3>
         <ul>
-          <li><b>UI (default):</b><br>
+          <li><b>UI:</b><br>
             <code>https://cenzwong.github.io/tools/tools/google2applemap.html?q=https://www.google.com/maps?q=Cocoro,+London</code>
           </li>
-          <li><b>API (JSON):</b><br>
+          <li><b>API (plain text):</b><br>
             <code>https://cenzwong.github.io/tools/tools/google2applemap.html?q=https://www.google.com/maps?q=Cocoro,+London&amp;mode=api</code>
           </li>
           <li><b>Redirect:</b><br>
             <code>https://cenzwong.github.io/tools/tools/google2applemap.html?q=https://www.google.com/maps?q=Cocoro,+London&amp;mode=redirect</code>
           </li>
         </ul>
-        <h3>📄 How It Works</h3>
-        <p>The script extracts either <code>?q=</code>, <code>/place/</code>, or <code>@lat,long</code>
-        coordinates from a Google Maps link and builds an Apple Maps URL of the form:<br>
-        <code>https://maps.apple.com/?q=...</code> or <code>?ll=lat,long</code>.</p>
-        <h3>🌙 Interface</h3>
-        <p>Dark mode friendly and works offline; hosted on GitHub Pages.</p>
-        <hr>
-        <p><a href="google2applemap.html">← Back to Converter</a></p>
-      `;
+        <h3>Details</h3>
+        <p>Extracts <code>!3d...!4d...</code>, <code>@lat,long</code>,
+        or <code>?q=</code>/<code>/place/</code> to build an Apple Maps URL.</p>
+        <hr><p><a href="google2applemap.html">← Back</a></p>`;
     } else {
-      const q = params.get("q");
-      const mode = (params.get("mode") || "ui").toLowerCase();
+      const q = p.get("q");
+      const mode = (p.get("mode") || "ui").toLowerCase();
       if (q) {
         try {
-          const appleMap = convertToAppleMap(q);
+          const apple = convertToAppleMap(q);
           if (mode === "redirect") {
-            window.location.href = appleMap;
+            window.location.href = apple;
           } else if (mode === "api") {
-            document.body.innerHTML = `<pre>${JSON.stringify({ apple_map: appleMap }, null, 2)}</pre>`;
+            // plain-text output for API use
+            document.body.innerHTML =
+              `<pre style="background:none;border:none;padding:0;margin:0;white-space:pre-wrap;">${apple}</pre>`;
           } else {
             document.getElementById("googleLink").value = q;
             document.getElementById("result").innerHTML = `
               ✅ <b>Apple Maps link:</b><br>
-              <a href="${appleMap}" target="_blank">${appleMap}</a>
-              <br><br>
-              <button onclick="navigator.clipboard.writeText('${appleMap}')">📋 Copy</button>
+              <a href="${apple}" target="_blank">${apple}</a><br><br>
+              <button onclick="navigator.clipboard.writeText('${apple}')">📋 Copy</button>
             `;
           }
         } catch (e) {
