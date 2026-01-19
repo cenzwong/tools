@@ -205,6 +205,47 @@
             .equiv-badge { background: rgba(255,255,255,0.05); }
         }
 
+        /* Benchmark Table Styles */
+        .benchmark-section {
+            margin-top: 3rem;
+        }
+        
+        .table-overflow {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--card-bg);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+        
+        th {
+            background: var(--bg-color);
+            padding: 1rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover {
+            background: rgba(37, 99, 235, 0.03);
+        }
+
         .actions {
             display: flex;
             justify-content: center;
@@ -357,6 +398,97 @@
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
             Copy Shareable Link
         </button>
+    </div>
+
+    <!-- Vehicle Benchmarks Table -->
+    <div class="benchmark-section">
+        <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Common Vehicle Benchmarks</h2>
+        <div class="table-overflow">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vehicle Model</th>
+                        <th>Type</th>
+                        <th>MPG (Comb)</th>
+                        <th>L/100km</th>
+                        <th>EV Efficiency</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tesla Model 3 (Long Range)</td>
+                        <td>EV</td>
+                        <td>~132 MPGe</td>
+                        <td>-</td>
+                        <td>5.4 mi/kWh (13.6 kWh/100km)</td>
+                    </tr>
+                    <tr>
+                        <td>Tesla Model 3 (Standard)</td>
+                        <td>EV</td>
+                        <td>~130 MPGe</td>
+                        <td>-</td>
+                        <td>4.8 mi/kWh (13.0 kWh/100km)</td>
+                    </tr>
+                    <tr>
+                        <td>Tesla Model Y (Long Range)</td>
+                        <td>EV</td>
+                        <td>~122 MPGe</td>
+                        <td>-</td>
+                        <td>4.0 mi/kWh (14.2 kWh/100km)</td>
+                    </tr>
+                    <tr>
+                        <td>Kia EV3 (81.4 kWh)</td>
+                        <td>EV</td>
+                        <td>~120 MPGe</td>
+                        <td>-</td>
+                        <td>4.6 mi/kWh (13.5 kWh/100km)</td>
+                    </tr>
+                    <tr>
+                        <td>Toyota Prius (2025)</td>
+                        <td>HEV</td>
+                        <td>57 MPG</td>
+                        <td>4.1 L</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Toyota Yaris Hybrid (1.5L)</td>
+                        <td>HEV</td>
+                        <td>71 MPG</td>
+                        <td>3.3 L</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Toyota C-HR PHEV (2.0L)</td>
+                        <td>PHEV</td>
+                        <td>~314 MPG*</td>
+                        <td>0.9 L*</td>
+                        <td>4.4 mi/kWh (14.0 kWh/100km)</td>
+                    </tr>
+                    <tr>
+                        <td>Toyota C-HR Hybrid (1.8L)</td>
+                        <td>HEV</td>
+                        <td>59 MPG</td>
+                        <td>4.0 L</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Kia Niro Hybrid</td>
+                        <td>HEV</td>
+                        <td>53 MPG</td>
+                        <td>4.4 L</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Hyundai Elantra Hybrid</td>
+                        <td>HEV</td>
+                        <td>54 MPG</td>
+                        <td>4.3 L</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">*PHEV figures assume starting with a full battery. Real-world performance varies based on driving habits.</p>
     </div>
 
     <div class="help-section">
