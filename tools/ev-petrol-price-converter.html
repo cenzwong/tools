@@ -283,6 +283,19 @@
             font-size: 0.875rem;
             color: var(--text-muted);
         }
+
+        /* Tiny select styling for the label row */
+        .tiny-select {
+            width: auto;
+            padding: 0 4px;
+            font-size: 0.7rem;
+            height: 20px;
+            border-radius: 4px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -358,14 +371,13 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="gallonType">Gallon Standard</label>
-                    <select id="gallonType">
-                        <option value="UK">UK / Imperial (4.546L)</option>
-                        <option value="US">US / Liquid (3.785L)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="fuelMpg">Fuel Economy (MPG)</label>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem;">
+                        <label for="fuelMpg" style="margin-bottom: 0;">Fuel Economy (MPG)</label>
+                        <select id="gallonType" class="tiny-select">
+                            <option value="UK">UK Gal</option>
+                            <option value="US">US Gal</option>
+                        </select>
+                    </div>
                     <div class="input-wrapper">
                         <input type="number" id="fuelMpg" value="45" step="0.5" min="1">
                         <span class="unit-label" id="mpgUnitLabel">MPG (UK)</span>
@@ -583,18 +595,21 @@
 
         // Styling results
         if (diff > 0) {
+            // EV is cheaper (Green)
             outputs.evYear.className = "res-val text-success";
             outputs.iceYear.className = "res-val text-danger";
             outputs.savingsCard.style.backgroundColor = 'var(--ev-color)';
             const percent = ((cheaperBy / annualIce) * 100).toFixed(0);
             outputs.savingsSubtext.textContent = `EV is ${percent}% cheaper than Petrol`;
         } else if (diff < 0) {
+            // Petrol is cheaper (Orange)
             outputs.evYear.className = "res-val text-danger";
             outputs.iceYear.className = "res-val text-success";
             outputs.savingsCard.style.backgroundColor = 'var(--petrol-color)';
             const percent = ((cheaperBy / annualEv) * 100).toFixed(0);
             outputs.savingsSubtext.textContent = `Petrol is ${percent}% cheaper than EV`;
         } else {
+            // Equal (Blue)
             outputs.evYear.className = "res-val";
             outputs.iceYear.className = "res-val";
             outputs.savingsCard.style.backgroundColor = 'var(--primary)';
