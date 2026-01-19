@@ -358,10 +358,17 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label for="gallonType">Gallon Standard</label>
+                    <select id="gallonType">
+                        <option value="UK">UK / Imperial (4.546L)</option>
+                        <option value="US">US / Liquid (3.785L)</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="fuelMpg">Fuel Economy (MPG)</label>
                     <div class="input-wrapper">
                         <input type="number" id="fuelMpg" value="45" step="0.5" min="1">
-                        <span class="unit-label">MPG</span>
+                        <span class="unit-label" id="mpgUnitLabel">MPG (UK)</span>
                     </div>
                 </div>
                 <div class="form-group">
@@ -408,94 +415,80 @@
                 <thead>
                     <tr>
                         <th>Vehicle Model</th>
-                        <th>Type</th>
-                        <th>MPG (Comb)</th>
-                        <th>L/100km</th>
-                        <th>EV Efficiency</th>
+                        <th>US MPG (Comb)</th>
+                        <th>British MPG (Comb)</th>
+                        <th>Metric (L/100km)</th>
+                        <th>EV Efficiency (mi/kWh)</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Tesla Model 3 (Long Range)</td>
-                        <td>EV</td>
-                        <td>~132 MPGe</td>
+                        <td>Tesla Model 3 (LR RWD)</td>
+                        <td>132 MPGe</td>
+                        <td>158 MPGe</td>
                         <td>-</td>
-                        <td>5.4 mi/kWh (13.6 kWh/100km)</td>
+                        <td>5.4 mi/kWh</td>
                     </tr>
                     <tr>
-                        <td>Tesla Model 3 (Standard)</td>
-                        <td>EV</td>
-                        <td>~130 MPGe</td>
+                        <td>Hyundai Ioniq 6 (EV)</td>
+                        <td>140 MPGe</td>
+                        <td>168 MPGe</td>
                         <td>-</td>
-                        <td>4.8 mi/kWh (13.0 kWh/100km)</td>
+                        <td>5.1 mi/kWh</td>
                     </tr>
                     <tr>
-                        <td>Tesla Model Y (Long Range)</td>
-                        <td>EV</td>
-                        <td>~122 MPGe</td>
+                        <td>Tesla Model Y (LR RWD)</td>
+                        <td>122 MPGe</td>
+                        <td>146 MPGe</td>
                         <td>-</td>
-                        <td>4.0 mi/kWh (14.2 kWh/100km)</td>
+                        <td>4.0 mi/kWh</td>
                     </tr>
                     <tr>
-                        <td>Kia EV3 (81.4 kWh)</td>
-                        <td>EV</td>
-                        <td>~120 MPGe</td>
-                        <td>-</td>
-                        <td>4.6 mi/kWh (13.5 kWh/100km)</td>
-                    </tr>
-                    <tr>
-                        <td>Toyota Prius (2025)</td>
-                        <td>HEV</td>
-                        <td>57 MPG</td>
-                        <td>4.1 L</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Toyota Yaris Hybrid (1.5L)</td>
-                        <td>HEV</td>
-                        <td>71 MPG</td>
+                        <td>Toyota Yaris Hybrid</td>
+                        <td>60 MPG</td>
+                        <td>72 MPG</td>
                         <td>3.3 L</td>
                         <td>-</td>
                     </tr>
                     <tr>
-                        <td>Toyota C-HR PHEV (2.0L)</td>
-                        <td>PHEV</td>
-                        <td>~314 MPG*</td>
-                        <td>0.9 L*</td>
-                        <td>4.4 mi/kWh (14.0 kWh/100km)</td>
+                        <td>Toyota Prius (HEV)</td>
+                        <td>57 MPG</td>
+                        <td>68 MPG</td>
+                        <td>4.1 L</td>
+                        <td>-</td>
                     </tr>
                     <tr>
-                        <td>Toyota C-HR Hybrid (1.8L)</td>
-                        <td>HEV</td>
+                        <td>Kia Niro Hybrid</td>
+                        <td>53 MPG</td>
+                        <td>64 MPG</td>
+                        <td>4.4 L</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Toyota C-HR Hybrid (1.8)</td>
+                        <td>49 MPG</td>
                         <td>59 MPG</td>
                         <td>4.0 L</td>
                         <td>-</td>
                     </tr>
                     <tr>
-                        <td>Kia Niro Hybrid</td>
-                        <td>HEV</td>
-                        <td>53 MPG</td>
-                        <td>4.4 L</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>Hyundai Elantra Hybrid</td>
-                        <td>HEV</td>
-                        <td>54 MPG</td>
-                        <td>4.3 L</td>
-                        <td>-</td>
+                        <td>Toyota C-HR PHEV</td>
+                        <td>73 MPG*</td>
+                        <td>88 MPG*</td>
+                        <td>3.2 L*</td>
+                        <td>4.1 mi/kWh</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">*PHEV figures assume starting with a full battery. Real-world performance varies based on driving habits.</p>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">*PHEV figures assume starting with a full battery. Note: British MPG is approx. 20% higher than US MPG due to larger gallon size.</p>
     </div>
 
     <div class="help-section">
         <h2>How it works</h2>
         <p><strong>Equivalency:</strong> The "Equiv. Elec" value tells you how much you would need to pay per kWh for an EV to cost exactly the same as your petrol car. For example, if it says "£0.50/kWh", that's your break-even point.</p>
-        <p><strong>Calculations:</strong> We assume UK Imperial Gallons (4.546L) for MPG. If you are in the US, please note this may slightly overestimate MPG economy compared to US Gallons.</p>
-        <p><strong>Units:</strong> Updates to distance-based efficiency (MPG or mi/kWh) will automatically recalculate the corresponding volumetric efficiency (L/100km or kWh/100km).</p>
+        <p><strong>Gallon Standards:</strong> US gallons are smaller (3.785L) than UK Imperial gallons (4.546L). Using the wrong standard can lead to a 20% error in cost calculations.</p>
+        <p><strong>Calculations:</strong> MPG to L/100km conversion is handled dynamically based on your chosen gallon standard.</p>
     </div>
 
     <div class="footer">
@@ -506,8 +499,13 @@
 <script>
 (function() {
     const MI_TO_KM = 1.60934;
-    const IMP_GAL_TO_L = 4.54609;
+    const UK_GAL_L = 4.54609;
+    const US_GAL_L = 3.78541;
     
+    // Constants for MPG to L/100km: (100 * Gal_L) / Mi_to_Km
+    const UK_CONV_FACTOR = 282.481;
+    const US_CONV_FACTOR = 235.215;
+
     const inputs = {
         currency: document.getElementById('currency'),
         distance: document.getElementById('distance'),
@@ -516,7 +514,8 @@
         evEffKwh: document.getElementById('evEfficiencyKwh'),
         fuelPrice: document.getElementById('fuelPrice'),
         fuelMpg: document.getElementById('fuelMpg'),
-        fuelL100: document.getElementById('fuelL100')
+        fuelL100: document.getElementById('fuelL100'),
+        gallonType: document.getElementById('gallonType')
     };
 
     const outputs = {
@@ -526,18 +525,25 @@
         savingsSubtext: document.getElementById('savingsSubtext'),
         savingsCard: document.getElementById('savingsCard'),
         equivFuel: document.getElementById('equivFuel'),
-        equivElec: document.getElementById('equivElec')
+        equivElec: document.getElementById('equivElec'),
+        mpgUnitLabel: document.getElementById('mpgUnitLabel')
     };
 
     function updateLogic(triggerId) {
+        const gallonType = inputs.gallonType.value;
+        const convFactor = (gallonType === 'UK' ? UK_CONV_FACTOR : US_CONV_FACTOR);
+        
+        // Update Label
+        outputs.mpgUnitLabel.textContent = (gallonType === 'UK' ? 'MPG (UK)' : 'MPG (US)');
+
         if (triggerId === 'currency') {
             document.querySelectorAll('.cur-sym').forEach(el => el.textContent = inputs.currency.value);
-        } else if (triggerId === 'fuelMpg') {
+        } else if (triggerId === 'fuelMpg' || triggerId === 'gallonType') {
             const mpg = parseFloat(inputs.fuelMpg.value);
-            if (mpg > 0) inputs.fuelL100.value = (282.481 / mpg).toFixed(1);
+            if (mpg > 0) inputs.fuelL100.value = (convFactor / mpg).toFixed(1);
         } else if (triggerId === 'fuelL100') {
             const l100 = parseFloat(inputs.fuelL100.value);
-            if (l100 > 0) inputs.fuelMpg.value = (282.481 / l100).toFixed(1);
+            if (l100 > 0) inputs.fuelMpg.value = (convFactor / l100).toFixed(1);
         } else if (triggerId === 'evEfficiencyMi') {
             const miKwh = parseFloat(inputs.evEffMi.value);
             if (miKwh > 0) inputs.evEffKwh.value = (100 / (miKwh * MI_TO_KM)).toFixed(1);
@@ -552,6 +558,8 @@
     function calculate() {
         const dist = parseFloat(inputs.distance.value) || 0;
         const cur = inputs.currency.value;
+        const gallonType = inputs.gallonType.value;
+        const galToL = (gallonType === 'UK' ? UK_GAL_L : US_GAL_L);
         
         // EV Math
         const evMiKwh = parseFloat(inputs.evEffMi.value) || 1;
@@ -561,7 +569,7 @@
         // Petrol Math
         const mpg = parseFloat(inputs.fuelMpg.value) || 1;
         const fPrice = parseFloat(inputs.fuelPrice.value) || 0;
-        const annualIce = (dist / mpg) * IMP_GAL_TO_L * fPrice;
+        const annualIce = (dist / mpg) * galToL * fPrice;
 
         const diff = annualIce - annualEv;
         const cheaperBy = Math.abs(diff);
@@ -575,21 +583,18 @@
 
         // Styling results
         if (diff > 0) {
-            // EV is cheaper (Green)
             outputs.evYear.className = "res-val text-success";
             outputs.iceYear.className = "res-val text-danger";
             outputs.savingsCard.style.backgroundColor = 'var(--ev-color)';
             const percent = ((cheaperBy / annualIce) * 100).toFixed(0);
             outputs.savingsSubtext.textContent = `EV is ${percent}% cheaper than Petrol`;
         } else if (diff < 0) {
-            // Petrol is cheaper (Orange)
             outputs.evYear.className = "res-val text-danger";
             outputs.iceYear.className = "res-val text-success";
             outputs.savingsCard.style.backgroundColor = 'var(--petrol-color)';
             const percent = ((cheaperBy / annualEv) * 100).toFixed(0);
             outputs.savingsSubtext.textContent = `Petrol is ${percent}% cheaper than EV`;
         } else {
-            // Equal (Blue)
             outputs.evYear.className = "res-val";
             outputs.iceYear.className = "res-val";
             outputs.savingsCard.style.backgroundColor = 'var(--primary)';
@@ -597,7 +602,7 @@
         }
 
         // Equivalency Logic
-        const fuelEquiv = annualEv / ((dist / mpg) * IMP_GAL_TO_L);
+        const fuelEquiv = annualEv / ((dist / mpg) * galToL);
         outputs.equivFuel.textContent = `Break-even Fuel: ${cur}${fuelEquiv.toFixed(2)}/L`;
 
         const elecEquiv = annualIce / (dist / evMiKwh);
@@ -609,10 +614,8 @@
     });
 
     document.getElementById('copyBtn').addEventListener('click', () => {
-        // Construct human-readable query parameters
         const params = new URLSearchParams();
         Object.keys(inputs).forEach(k => params.append(k, inputs[k].value));
-        
         const url = window.location.origin + window.location.pathname + '?' + params.toString();
         
         const dummy = document.createElement('input');
@@ -630,8 +633,6 @@
 
     window.onload = () => {
         const params = new URLSearchParams(window.location.search);
-        
-        // Restore from individual readable parameters
         Object.keys(inputs).forEach(k => {
             const val = params.get(k);
             if (val !== null && inputs[k]) {
