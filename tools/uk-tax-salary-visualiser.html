@@ -7423,7 +7423,10 @@ const App = () => {
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-slate-600 mt-1", children: [
             "Keep ",
-            /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: formatCurrency(1 - marginalRate / 100) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("strong", { children: [
+              "£",
+              (1 - marginalRate / 100).toFixed(2)
+            ] }),
             " of every £1 extra."
           ] })
         ] })
