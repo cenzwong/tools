@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark Sizing Whiteboard & Calculator</title>
+    <!-- Tailwind CSS for modern responsive utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font for beautiful typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .whiteboard-grid {
+            background-color: #fafbfc;
+            background-image:
+                radial-gradient(#cbd5e1 1.2px, transparent 1.2px),
+                radial-gradient(#cbd5e1 1.2px, #fafbfc 1.2px);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+        }
+        .marker-handwritten {
+            font-family: 'Architects Daughter', cursive, sans-serif;
+        }
+        .terminal-font {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Custom scrollbar for beautiful dashboard aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 py-4 px-6 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2.5 rounded-lg text-white shadow-md shadow-indigo-900/40">
+                    <i class="fa-solid fa-atom text-2xl animate-spin-slow"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        Spark Sizing Whiteboard
+                    </h1>
+                    <p class="text-xs text-slate-400">Optimal Cluster Configuration Engine & Simulator</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs bg-slate-900/60 px-4 py-2 rounded-full border border-slate-700">
+                <span class="inline-block w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
+                <span class="text-slate-300 font-medium">Industry Best-Practice Rules Applied</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Panel: Interactive Controller (4 Columns) -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center gap-2 mb-4 border-b border-slate-700 pb-3">
+                    <i class="fa-solid fa-sliders text-indigo-400 text-lg"></i>
+                    <h2 class="text-lg font-bold text-slate-200">Cluster Parameters</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Nodes Input -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Number of Nodes</label>
+                            <span class="text-sm font-bold text-indigo-400" id="nodes-val">20</span>
+                        </div>
+                        <input type="range" id="nodes-range" min="1" max="200" value="20" class="w-full accent-indigo-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>1 node</span>
+                            <span>200 nodes</span>
+                        </div>
+                    </div>
+
+                    <!-- vCPUs per Node Input -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">vCPUs / Node</label>
+                            <span class="text-sm font-bold text-indigo-400" id="cores-val">16</span>
+                        </div>
+                        <input type="range" id="cores-range" min="2" max="128" value="16" class="w-full accent-indigo-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>2 vCPUs</span>
+                            <span>128 vCPUs</span>
+                        </div>
+                    </div>
+
+                    <!-- RAM per Node Input -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">RAM / Node (GB)</label>
+                            <span class="text-sm font-bold text-indigo-400" id="ram-val">64</span>
+                        </div>
+                        <input type="range" id="ram-range" min="4" max="1024" value="64" class="w-full accent-indigo-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>4 GB</span>
+                            <span>1024 GB</span>
+                        </div>
+                    </div>
+
+                    <!-- Dataset Size Input -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Dataset Size (GB)</label>
+                            <span class="text-sm font-bold text-indigo-400" id="data-val">2048</span>
+                        </div>
+                        <input type="range" id="data-range" min="10" max="10000" value="2048" class="w-full accent-indigo-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>10 GB</span>
+                            <span>10,000 GB (10 TB)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fine-tuning Sizing Strategies Panel -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center gap-2 mb-4 border-b border-slate-700 pb-3">
+                    <i class="fa-solid fa-gears text-purple-400 text-lg"></i>
+                    <h2 class="text-lg font-bold text-slate-200">Sizing Fine-Tuning</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Target Executor Cores Selector -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Cores per Executor</label>
+                            <span class="text-sm font-bold text-purple-400" id="exec-cores-val">5</span>
+                        </div>
+                        <select id="exec-cores-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="2">2 (High I/O focus)</option>
+                            <option value="3">3 (Small nodes)</option>
+                            <option value="4">4 (Great concurrency)</option>
+                            <option value="5" selected>5 (Industry Gold Standard)</option>
+                            <option value="6">6 (High CPU computation)</option>
+                        </select>
+                        <p class="text-[10px] text-slate-500 mt-1">5 cores minimizes thread contention while keeping HDFS/Object Store throughput optimal.</p>
+                    </div>
+
+                    <!-- Reservation parameters -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] font-semibold uppercase text-slate-400 block mb-1">OS Cores Reserved</label>
+                            <input type="number" id="os-cores-input" value="1" min="1" max="8" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 text-center">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-semibold uppercase text-slate-400 block mb-1">OS RAM Reserved (GB)</label>
+                            <input type="number" id="os-ram-input" value="1" min="1" max="64" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 text-center">
+                        </div>
+                    </div>
+
+                    <!-- Overhead Percentage -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Memory Overhead %</label>
+                            <span class="text-xs font-semibold text-purple-400" id="overhead-percent-val">10%</span>
+                        </div>
+                        <input type="range" id="overhead-range" min="7" max="25" value="10" class="w-full accent-purple-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- YARN/Mesos Mode toggle -->
+                    <div>
+                        <label class="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-1.5">Allocation Mode</label>
+                        <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1 rounded-lg border border-slate-700">
+                            <button id="mode-raw" class="text-xs py-1.5 px-2 rounded-md font-medium text-slate-400 hover:text-white transition duration-200">Theoretical Max</button>
+                            <button id="mode-yarn" class="text-xs py-1.5 px-2 rounded-md font-medium bg-slate-750 text-indigo-400 border border-indigo-500/30 transition duration-200">YARN Cluster</button>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1.5" id="mode-desc">Reserves 1 executor for the Application Master (YARN Cluster standard).</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Whiteboard & Results Visualizer (8 Columns) -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+
+            <!-- Tab Selection Bar -->
+            <div class="flex border-b border-slate-700 bg-slate-800/80 p-1.5 rounded-xl gap-1">
+                <button id="tab-btn-whiteboard" class="flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition duration-200 bg-indigo-600 text-white shadow-lg">
+                    <i class="fa-solid fa-chalkboard"></i>
+                    Whiteboard Steps
+                </button>
+                <button id="tab-btn-visualizer" class="flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 transition duration-200">
+                    <i class="fa-solid fa-network-wired"></i>
+                    Node Visualizer
+                </button>
+                <button id="tab-btn-terminal" class="flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 transition duration-200">
+                    <i class="fa-solid fa-terminal"></i>
+                    Spark Submit Command
+                </button>
+            </div>
+
+            <!-- TAB 1: Whiteboard View -->
+            <div id="tab-whiteboard" class="whiteboard-grid text-slate-800 border-2 border-slate-300 rounded-2xl shadow-2xl p-6 relative overflow-hidden flex-1 flex flex-col min-h-[550px]">
+                <!-- Chalk/Pen tray effect -->
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-400 via-blue-400 to-green-400"></div>
+
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full border border-indigo-200 uppercase tracking-widest">
+                            Dry-Erase Dashboard
+                        </span>
+                        <h3 class="text-2xl font-black text-slate-900 mt-1 font-serif tracking-tight">Interactive Whiteboard</h3>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="w-3 h-3 rounded-full bg-blue-500" title="Blue Marker"></span>
+                        <span class="w-3 h-3 rounded-full bg-red-500" title="Red Marker"></span>
+                        <span class="w-3 h-3 rounded-full bg-emerald-500" title="Green Marker"></span>
+                        <span class="w-3 h-3 rounded-full bg-slate-800" title="Black Marker"></span>
+                    </div>
+                </div>
+
+                <!-- Live Dynamic Steps (Whiteboard Styled Cards) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 flex-1">
+
+                    <!-- STEP 1 CARD -->
+                    <div class="bg-white border-2 border-slate-200/80 rounded-xl p-4 shadow-md hover:shadow-lg transition-all border-l-4 border-l-indigo-600">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="bg-indigo-50 border border-indigo-200 text-indigo-700 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs">1</div>
+                            <h4 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Reserved Resources</h4>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3 font-medium">Subtracting overhead requirements per Node for Host system Processes & OS.</p>
+                        <div class="space-y-2 text-xs border-t border-slate-100 pt-2 font-mono">
+                            <div class="flex justify-between text-slate-700">
+                                <span>vCPUs/node (Avail) :</span>
+                                <span class="font-bold text-slate-900" id="wb-s1-cores-node">16 - 1 = 15</span>
+                            </div>
+                            <div class="flex justify-between text-slate-700">
+                                <span>RAM/node (Avail) :</span>
+                                <span class="font-bold text-slate-900" id="wb-s1-ram-node">64 - 1 = 63GB</span>
+                            </div>
+                            <div class="flex justify-between text-indigo-700 font-bold border-t border-dashed border-slate-200 pt-1.5">
+                                <span>Total Core Cluster:</span>
+                                <span id="wb-s1-total-cores">300 Cores</span>
+                            </div>
+                            <div class="flex justify-between text-indigo-700 font-bold">
+                                <span>Total RAM Cluster:</span>
+                                <span id="wb-s1-total-ram">1,260 GB</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2 CARD -->
+                    <div class="bg-white border-2 border-slate-200/80 rounded-xl p-4 shadow-md hover:shadow-lg transition-all border-l-4 border-l-purple-600">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="bg-purple-50 border border-purple-200 text-purple-700 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs">2</div>
+                            <h4 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Target Executor Cores</h4>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-2 font-medium">Finding the concurrent execution sweet-spot for distributed pipeline operations.</p>
+                        <div class="border-t border-slate-100 pt-2">
+                            <div class="flex justify-between items-center bg-purple-50 p-2 rounded-lg border border-purple-100">
+                                <span class="text-xs font-bold text-purple-900">Sweet Spot Choice:</span>
+                                <span class="text-xs font-black text-purple-700 px-2 py-0.5 bg-white rounded shadow-sm" id="wb-s2-cores">5 Cores</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">
+                                <i class="fa-solid fa-circle-info text-purple-500 mr-1"></i>
+                                Cores between 4 and 6 balance disk write buffers, CPU instruction parallelization, and avoid deep JVM thread contention.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3 CARD -->
+                    <div class="bg-white border-2 border-slate-200/80 rounded-xl p-4 shadow-md hover:shadow-lg transition-all border-l-4 border-l-emerald-600">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs">3</div>
+                            <h4 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Executors Math Layout</h4>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3 font-medium">Calculating spatial layout boundaries inside of isolated physical hosts.</p>
+                        <div class="space-y-2 text-xs border-t border-slate-100 pt-2 font-mono">
+                            <div class="flex justify-between text-slate-700">
+                                <span>Executors / Node:</span>
+                                <span class="font-bold text-slate-900" id="wb-s3-exec-node">15 ÷ 5 = 3 execs</span>
+                            </div>
+                            <div class="flex justify-between text-slate-700">
+                                <span>Raw Cluster Limit:</span>
+                                <span class="font-bold text-slate-900" id="wb-s3-raw-exec">20 × 3 = 60 execs</span>
+                            </div>
+                            <div class="flex justify-between text-emerald-700 font-bold border-t border-dashed border-slate-200 pt-1.5" id="wb-s3-yarn-line">
+                                <span>YARN Mode Spark Count:</span>
+                                <span id="wb-s3-final-exec">59 executors (60 - 1 AM)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4 CARD -->
+                    <div class="bg-white border-2 border-slate-200/80 rounded-xl p-4 shadow-md hover:shadow-lg transition-all border-l-4 border-l-rose-600">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="bg-rose-50 border border-rose-200 text-rose-700 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs">4</div>
+                            <h4 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Memory &amp; Overhead math</h4>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3 font-medium">Isolating memory footprint to protect against JVM OutOfMemory errors.</p>
+                        <div class="space-y-2 text-xs border-t border-slate-100 pt-2 font-mono">
+                            <div class="flex justify-between text-slate-700">
+                                <span>Raw RAM/Executor:</span>
+                                <span class="font-bold text-slate-900" id="wb-s4-raw-mem">21.0 GB</span>
+                            </div>
+                            <div class="flex justify-between text-slate-700">
+                                <span>Overhead (Safety):</span>
+                                <span class="font-bold text-slate-900 text-rose-600" id="wb-s4-overhead">2.1 GB</span>
+                            </div>
+                            <div class="flex justify-between text-emerald-700 font-bold border-t border-dashed border-slate-200 pt-1.5">
+                                <span>Usable Exec Memory:</span>
+                                <span id="wb-s4-usable">18 GB (--executor-memory)</span>
+                            </div>
+                            <div class="flex justify-between text-rose-700 font-bold">
+                                <span>Overhead Spark Setting:</span>
+                                <span id="wb-s4-over-command">3 GB (--memoryOverhead)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Performance Estimator Panel -->
+                <div class="mt-6 bg-slate-900 text-slate-200 rounded-xl p-4 border border-slate-800">
+                    <h4 class="font-bold text-sm text-slate-300 mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-gauge-high text-yellow-500"></i>
+                        Live Dataset Performance Estimator (for <span id="perf-dataset-size">2 TB</span> Dataset)
+                    </h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-750">
+                            <span class="block text-[10px] text-slate-400 font-semibold uppercase">Total Partitions</span>
+                            <span class="text-lg font-extrabold text-indigo-400" id="perf-partitions">16,000</span>
+                        </div>
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-750">
+                            <span class="block text-[10px] text-slate-400 font-semibold uppercase">Concurrency Slots</span>
+                            <span class="text-lg font-extrabold text-emerald-400" id="perf-slots">300</span>
+                        </div>
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-750">
+                            <span class="block text-[10px] text-slate-400 font-semibold uppercase">Processing Waves</span>
+                            <span class="text-lg font-extrabold text-purple-400" id="perf-waves">53 Waves</span>
+                        </div>
+                        <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-750">
+                            <span class="block text-[10px] text-slate-400 font-semibold uppercase">Est. Completion Time</span>
+                            <span class="text-lg font-extrabold text-yellow-400 animate-pulse" id="perf-duration">15 mins</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: Dynamic Node Visualizer -->
+            <div id="tab-visualizer" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl flex-1 flex flex-col justify-between min-h-[550px]">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="inline-block px-2.5 py-1 text-xs font-bold bg-purple-900/40 text-purple-300 rounded-full border border-purple-700/50 uppercase tracking-widest">
+                                Layout Scheme
+                            </span>
+                            <h3 class="text-xl font-bold text-slate-200 mt-1">Single Node Resource Mapping</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 max-w-xs text-right hidden sm:block">Visual representation of vCPU and memory boundaries parsed inside of each host instance.</p>
+                    </div>
+
+                    <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-750">
+                        <!-- Node Architecture Graphic -->
+                        <div class="border-2 border-indigo-500/30 rounded-xl bg-slate-950 p-6 relative">
+                            <!-- Label top left -->
+                            <div class="absolute -top-3 left-4 bg-indigo-600 text-white text-xs px-3 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                                Single Physical Cluster Node (<span id="vis-node-total-cores">16</span> vCPUs / <span id="vis-node-total-ram">64</span>GB RAM)
+                            </div>
+
+                            <!-- Interior sections wrapper -->
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-5 mt-2">
+                                <!-- OS Reserved Section -->
+                                <div class="md:col-span-3 border border-red-500/20 bg-red-500/5 rounded-lg p-3 text-center flex flex-col justify-center items-center">
+                                    <div class="w-8 h-8 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mb-1">
+                                        <i class="fa-solid fa-user-shield text-sm"></i>
+                                    </div>
+                                    <h5 class="text-xs font-bold text-red-400 uppercase">OS &amp; YARN System</h5>
+                                    <div class="text-xs font-mono mt-1 text-slate-300">
+                                        <span class="block" id="vis-os-cores">1 vCPU</span>
+                                        <span class="block" id="vis-os-ram">1 GB RAM</span>
+                                    </div>
+                                    <p class="text-[9px] text-slate-500 mt-2">Reserved for OS kernel background and YARN NodeManager process execution.</p>
+                                </div>
+
+                                <!-- Spark Container Space -->
+                                <div class="md:col-span-9 border border-indigo-500/30 bg-indigo-500/5 rounded-lg p-4">
+                                    <h5 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 justify-between">
+                                        <span>Allocated Spark Executors Area</span>
+                                        <span class="text-xs font-semibold px-2 py-0.5 bg-indigo-500/10 rounded" id="vis-node-exec-count">3 Executors</span>
+                                    </h5>
+
+                                    <!-- Dynamic Container Box for Executors Grid inside host -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="vis-executors-container">
+                                        <!-- Will be dynamic but here is default schema template -->
+                                        <div class="bg-slate-900 border border-slate-700 rounded-lg p-2.5 flex flex-col justify-between">
+                                            <div class="flex items-center justify-between border-b border-slate-800 pb-1 mb-1.5">
+                                                <span class="text-[10px] font-bold text-slate-300">Executor #1</span>
+                                                <span class="text-[9px] bg-slate-800 px-1 py-0.2 rounded text-slate-400 font-mono">JVM</span>
+                                            </div>
+                                            <div class="space-y-1 text-xs">
+                                                <div class="flex justify-between font-mono text-slate-400">
+                                                    <span>vCPUs:</span>
+                                                    <span class="text-slate-200">5</span>
+                                                </div>
+                                                <div class="flex justify-between font-mono text-slate-400">
+                                                    <span>Memory:</span>
+                                                    <span class="text-indigo-400">18G</span>
+                                                </div>
+                                                <div class="flex justify-between font-mono text-slate-400">
+                                                    <span>Overhead:</span>
+                                                    <span class="text-pink-400">3G</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Warning message if resources wasted -->
+                                    <div id="vis-wastage-banner" class="mt-3 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] p-2 rounded-lg flex items-start gap-1.5 hidden">
+                                        <i class="fa-solid fa-triangle-exclamation text-amber-400 mt-0.5"></i>
+                                        <span><strong>Wastage Notice:</strong> Some cores/RAM are unassigned because executors must fit evenly! Try adjusting Cores per Executor parameter.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-750 p-4 rounded-xl mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-lg">
+                            <i class="fa-solid fa-microchip"></i>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-semibold uppercase">Cluster Concurrency</span>
+                            <span class="text-sm font-bold text-slate-200" id="vis-footprint-cores">300 Available Slots</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-lg">
+                            <i class="fa-solid fa-memory"></i>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-semibold uppercase">Allocated Memory</span>
+                            <span class="text-sm font-bold text-slate-200" id="vis-footprint-ram">1,260 GB Total Allocation</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 text-lg">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-semibold uppercase">Cluster Efficiency</span>
+                            <span class="text-sm font-bold text-slate-200" id="vis-footprint-efficiency">100% Core Utilization</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Copyable Spark Submit Code Block -->
+            <div id="tab-terminal" class="hidden bg-slate-850 border border-slate-700 rounded-2xl p-6 shadow-xl flex-1 flex flex-col justify-between min-h-[550px]">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="inline-block px-2.5 py-1 text-xs font-bold bg-green-900/40 text-green-300 rounded-full border border-green-700/50 uppercase tracking-widest">
+                                Production Script
+                            </span>
+                            <h3 class="text-xl font-bold text-slate-200 mt-1">Direct Spark-Submit Config Command</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 max-w-xs text-right hidden sm:block">Copy this custom-sized optimal command directly to shell script engines.</p>
+                    </div>
+
+                    <div class="relative bg-slate-900 border-2 border-slate-750 rounded-xl overflow-hidden shadow-2xl">
+                        <!-- Code Block Bar -->
+                        <div class="bg-slate-950 px-4 py-2 border-b border-slate-800 flex justify-between items-center">
+                            <div class="flex gap-1.5">
+                                <span class="w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+                                <span class="w-2.5 h-2.5 bg-amber-500 rounded-full"></span>
+                                <span class="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
+                            </div>
+                            <span class="text-[10px] text-slate-500 font-mono tracking-wider">BASH • SPARK_SUBMIT_SUBMIT</span>
+                            <button id="copy-btn" class="bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs py-1 px-3 rounded-md transition duration-250 flex items-center gap-1.5 shadow-md">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Copy Code</span>
+                            </button>
+                        </div>
+                        <!-- Actual terminal output content -->
+                        <div class="p-6 overflow-x-auto">
+                            <pre class="terminal-font text-xs sm:text-sm text-slate-300 select-all leading-relaxed whitespace-pre" id="terminal-code">
+spark-submit \
+  --num-executors 60 \
+  --executor-cores 5 \
+  --executor-memory 18g \
+  --executor-memoryOverhead 3g \
+  --driver-memory 4g \
+  your_etl_job.py
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warning Banner inside code tab if resources are heavily wasted -->
+                <div class="mt-4 bg-slate-900 p-4 rounded-xl border border-slate-850" id="code-sizing-verdict">
+                    <h4 class="font-semibold text-xs text-slate-400 uppercase tracking-wide mb-1.5">Recommendation Verdict</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed" id="recommendation-text">
+                        This sizing profile achieves near-perfect allocation ratios. 300 total cores utilizes 100% of physical capacity after OS buffer constraints.
+                    </p>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Footnote -->
+    <footer class="mt-8 mb-4 px-6 text-center">
+        <p class="text-sm text-slate-400">
+            Inspired by:
+            <a href="https://medium.com/towards-data-engineering/spark-interview-question-spark-executor-tuning-masterclass-process-2tb-parquet-like-a-pro-6fa0428b1237" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors">
+                Spark Executor Tuning Masterclass
+            </a>
+        </p>
+    </footer>
+
+    <!-- Custom elegant Toast Alert (Replaces Alert Window entirely) -->
+    <div id="toast-message" class="fixed bottom-6 right-6 bg-slate-850 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-24 opacity-0 transition duration-300 pointer-events-none z-50">
+        <div class="bg-indigo-500 text-white p-1.5 rounded-lg">
+            <i class="fa-solid fa-circle-check text-md"></i>
+        </div>
+        <div>
+            <span class="block text-xs text-slate-400 uppercase tracking-wider font-semibold">System Notification</span>
+            <span class="text-sm font-medium text-slate-200" id="toast-text">Success message goes here.</span>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT CALCULATOR ENGINE -->
+    <script>
+        // DOM Elements
+        const nodesRange = document.getElementById('nodes-range');
+        const nodesVal = document.getElementById('nodes-val');
+        const coresRange = document.getElementById('cores-range');
+        const coresVal = document.getElementById('cores-val');
+        const ramRange = document.getElementById('ram-range');
+        const ramVal = document.getElementById('ram-val');
+        const dataRange = document.getElementById('data-range');
+        const dataVal = document.getElementById('data-val');
+
+        const execCoresSelect = document.getElementById('exec-cores-select');
+        const execCoresVal = document.getElementById('exec-cores-val');
+        const osCoresInput = document.getElementById('os-cores-input');
+        const osRamInput = document.getElementById('os-ram-input');
+        const overheadRange = document.getElementById('overhead-range');
+        const overheadPercentVal = document.getElementById('overhead-percent-val');
+
+        // YARN/Mesos Mode toggle
+        const modeDesc = document.getElementById('mode-desc');
+        const modeRawBtn = document.getElementById('mode-raw');
+        const modeYarnBtn = document.getElementById('mode-yarn');
+
+        // Tab buttons
+        const tabBtnWhiteboard = document.getElementById('tab-btn-whiteboard');
+        const tabBtnVisualizer = document.getElementById('tab-btn-visualizer');
+        const tabBtnTerminal = document.getElementById('tab-btn-terminal');
+
+        // Tab panels
+        const tabWhiteboard = document.getElementById('tab-whiteboard');
+        const tabVisualizer = document.getElementById('tab-visualizer');
+        const tabTerminal = document.getElementById('tab-terminal');
+
+        // Outputs Step 1
+        const wbS1CoresNode = document.getElementById('wb-s1-cores-node');
+        const wbS1RamNode = document.getElementById('wb-s1-ram-node');
+        const wbS1TotalCores = document.getElementById('wb-s1-total-cores');
+        const wbS1TotalRam = document.getElementById('wb-s1-total-ram');
+
+        // Outputs Step 2
+        const wbS2Cores = document.getElementById('wb-s2-cores');
+
+        // Outputs Step 3
+        const wbS3ExecNode = document.getElementById('wb-s3-exec-node');
+        const wbS3RawExec = document.getElementById('wb-s3-raw-exec');
+        const wbS3YarnLine = document.getElementById('wb-s3-yarn-line');
+        const wbS3FinalExec = document.getElementById('wb-s3-final-exec');
+
+        // Outputs Step 4
+        const wbS4RawMem = document.getElementById('wb-s4-raw-mem');
+        const wbS4Overhead = document.getElementById('wb-s4-overhead');
+        const wbS4Usable = document.getElementById('wb-s4-usable');
+        const wbS4OverCommand = document.getElementById('wb-s4-over-command');
+
+        // Performance Outputs
+        const perfDatasetSize = document.getElementById('perf-dataset-size');
+        const perfPartitions = document.getElementById('perf-partitions');
+        const perfSlots = document.getElementById('perf-slots');
+        const perfWaves = document.getElementById('perf-waves');
+        const perfDuration = document.getElementById('perf-duration');
+
+        // Visualizer Output Elements
+        const visNodeTotalCores = document.getElementById('vis-node-total-cores');
+        const visNodeTotalRam = document.getElementById('vis-node-total-ram');
+        const visOsCores = document.getElementById('vis-os-cores');
+        const visOsRam = document.getElementById('vis-os-ram');
+        const visNodeExecCount = document.getElementById('vis-node-exec-count');
+        const visExecutorsContainer = document.getElementById('vis-executors-container');
+        const visWastageBanner = document.getElementById('vis-wastage-banner');
+
+        const visFootprintCores = document.getElementById('vis-footprint-cores');
+        const visFootprintRam = document.getElementById('vis-footprint-ram');
+        const visFootprintEfficiency = document.getElementById('vis-footprint-efficiency');
+
+        // Code Output Elements
+        const terminalCode = document.getElementById('terminal-code');
+        const copyBtn = document.getElementById('copy-btn');
+        const recommendationText = document.getElementById('recommendation-text');
+
+        // Sizing Configuration state variables
+        let yarnAllocationMode = true; // YARN mode is active by default
+
+        // Tab switching functions
+        function switchTab(activeTab) {
+            tabBtnWhiteboard.className = "flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition duration-200 text-slate-400 hover:text-slate-200";
+            tabBtnVisualizer.className = "flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition duration-200 text-slate-400 hover:text-slate-200";
+            tabBtnTerminal.className = "flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition duration-200 text-slate-400 hover:text-slate-200";
+
+            tabWhiteboard.classList.add('hidden');
+            tabVisualizer.classList.add('hidden');
+            tabTerminal.classList.add('hidden');
+
+            if (activeTab === 'whiteboard') {
+                tabBtnWhiteboard.className = "flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition duration-200 bg-indigo-600 text-white shadow-lg";
+                tabWhiteboard.classList.remove('hidden');
+            } else if (activeTab === 'visualizer') {
+                tabBtnVisualizer.className = "flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition duration-200 bg-indigo-600 text-white shadow-lg";
+                tabVisualizer.classList.remove('hidden');
+            } else if (activeTab === 'terminal') {
+                tabBtnTerminal.className = "flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition duration-200 bg-indigo-600 text-white shadow-lg";
+                tabTerminal.classList.remove('hidden');
+            }
+        }
+
+        tabBtnWhiteboard.addEventListener('click', () => switchTab('whiteboard'));
+        tabBtnVisualizer.addEventListener('click', () => switchTab('visualizer'));
+        tabBtnTerminal.addEventListener('click', () => switchTab('terminal'));
+
+        // Toggle Buttons Handler for Raw vs YARN Cluster Modes
+        modeRawBtn.addEventListener('click', () => {
+            yarnAllocationMode = false;
+            modeRawBtn.className = "text-xs py-1.5 px-2 rounded-md font-medium bg-slate-750 text-indigo-400 border border-indigo-500/30 transition duration-200";
+            modeYarnBtn.className = "text-xs py-1.5 px-2 rounded-md font-medium text-slate-400 hover:text-white transition duration-200";
+            modeDesc.innerText = "Calculates pure raw mathematical allocation. Zero overhead is reserved for cluster operations.";
+            updateCalculations();
+        });
+
+        modeYarnBtn.addEventListener('click', () => {
+            yarnAllocationMode = true;
+            modeYarnBtn.className = "text-xs py-1.5 px-2 rounded-md font-medium bg-slate-750 text-indigo-400 border border-indigo-500/30 transition duration-200";
+            modeRawBtn.className = "text-xs py-1.5 px-2 rounded-md font-medium text-slate-400 hover:text-white transition duration-200";
+            modeDesc.innerText = "Reserves 1 executor for the Application Master (YARN Cluster standard).";
+            updateCalculations();
+        });
+
+        // Event listener hooks to update math calculations instantly
+        [nodesRange, coresRange, ramRange, dataRange, execCoresSelect, osCoresInput, osRamInput, overheadRange].forEach(input => {
+            input.addEventListener('input', () => {
+                updateTextValues();
+                updateCalculations();
+            });
+        });
+
+        function updateTextValues() {
+            nodesVal.innerText = nodesRange.value;
+            coresVal.innerText = coresRange.value;
+            ramVal.innerText = ramRange.value;
+            dataVal.innerText = dataRange.value;
+            execCoresVal.innerText = execCoresSelect.value;
+            overheadPercentVal.innerText = overheadRange.value + '%';
+        }
+
+        // Main Core Sizing Calculation Function
+        function updateCalculations() {
+            const numNodes = parseInt(nodesRange.value);
+            const rawCores = parseInt(coresRange.value);
+            const rawRam = parseInt(ramRange.value);
+            const datasetSizeGb = parseInt(dataRange.value);
+
+            const targetExecCores = parseInt(execCoresSelect.value);
+            const osCores = Math.max(0, parseInt(osCoresInput.value));
+            const osRam = Math.max(0, parseInt(osRamInput.value));
+            const overheadRate = parseFloat(overheadRange.value) / 100.0;
+
+            // STEP 1: Available resources per Node
+            const availCoresNode = Math.max(1, rawCores - osCores);
+            const availRamNode = Math.max(1, rawRam - osRam);
+            const totalCoresCluster = numNodes * availCoresNode;
+            const totalRamCluster = numNodes * availRamNode;
+
+            // Display Step 1 values on whiteboard
+            wbS1CoresNode.innerHTML = `${rawCores} - ${osCores} = <strong class="text-slate-900">${availCoresNode} vCPUs</strong>`;
+            wbS1RamNode.innerHTML = `${rawRam} - ${osRam} = <strong class="text-slate-900">${availRamNode} GB</strong>`;
+            wbS1TotalCores.innerText = `${totalCoresCluster.toLocaleString()} vCPUs`;
+            wbS1TotalRam.innerText = `${totalRamCluster.toLocaleString()} GB`;
+
+            // STEP 2: Target Cores per Executor
+            wbS2Cores.innerText = `${targetExecCores} Cores`;
+
+            // STEP 3: Executors count calculations
+            const execsPerNode = Math.floor(availCoresNode / targetExecCores);
+            const wastedCoresPerNode = availCoresNode - (execsPerNode * targetExecCores);
+            const rawTotalExecs = numNodes * execsPerNode;
+
+            let finalExecs = rawTotalExecs;
+            if (yarnAllocationMode) {
+                // Reserve 1 executor for YARN Application Master if we have enough
+                finalExecs = Math.max(0, rawTotalExecs - 1);
+            }
+
+            wbS3ExecNode.innerHTML = `${availCoresNode} ÷ ${targetExecCores} = <strong class="text-slate-900">${execsPerNode} per Node</strong>`;
+            wbS3RawExec.innerText = `${numNodes} × ${execsPerNode} = ${rawTotalExecs} Executors`;
+
+            if (yarnAllocationMode) {
+                wbS3YarnLine.classList.remove('hidden');
+                wbS3FinalExec.innerText = `${finalExecs} Executors (${rawTotalExecs} - 1 AM)`;
+            } else {
+                wbS3YarnLine.classList.add('hidden');
+                wbS3FinalExec.innerText = `${finalExecs} Executors`;
+            }
+
+            // STEP 4: Memory allocation & Overhead parameters
+            let rawRamPerExec = execsPerNode > 0 ? (availRamNode / execsPerNode) : 0;
+
+            // Usable Spark executor memory computation
+            let usableRamGb = Math.floor(rawRamPerExec * (1 - overheadRate));
+            // Spark configuration rules minimum 384MB or 10%
+            let computedOverheadGb = Math.ceil(rawRamPerExec - usableRamGb);
+
+            wbS4RawMem.innerText = `${rawRamPerExec.toFixed(1)} GB / Exec`;
+            wbS4Overhead.innerText = `${(rawRamPerExec * overheadRate).toFixed(1)} GB (${Math.round(overheadRate * 100)}%)`;
+            wbS4Usable.innerText = `${usableRamGb} GB usable`;
+            wbS4OverCommand.innerText = `${computedOverheadGb} GB (Overhead)`;
+
+            // Performance metrics computation
+            const partitionMultiplier = 8; // Assumes ~128MB chunks (8 partitions per GB)
+            const totalPartitionsCount = datasetSizeGb * partitionMultiplier;
+            const concurrentSlots = finalExecs * targetExecCores;
+            const waves = Math.ceil(totalPartitionsCount / (concurrentSlots > 0 ? concurrentSlots : 1));
+
+            // Roughly assume average wave execution in production speeds
+            // (1 Wave with average partition complexity takes roughly 15-20 seconds for standard clusters)
+            const waveDurationSec = 17;
+            const estimatedSecs = waves * waveDurationSec;
+            let finalTimeStr = "";
+            if (estimatedSecs < 60) {
+                finalTimeStr = `${estimatedSecs} seconds`;
+            } else {
+                const mins = Math.ceil(estimatedSecs / 60);
+                finalTimeStr = `~${mins} minutes`;
+            }
+
+            perfDatasetSize.innerText = datasetSizeGb >= 1000 ? `${(datasetSizeGb / 1000).toFixed(1)} TB` : `${datasetSizeGb} GB`;
+            perfPartitions.innerText = totalPartitionsCount.toLocaleString();
+            perfSlots.innerText = concurrentSlots.toLocaleString();
+            perfWaves.innerText = `${waves} Wave${waves > 1 ? 's' : ''}`;
+            perfDuration.innerText = finalTimeStr;
+
+            // Render Node Visualizer (Tab 2)
+            visNodeTotalCores.innerText = rawCores;
+            visNodeTotalRam.innerText = rawRam;
+            visOsCores.innerText = `${osCores} vCPU${osCores > 1 ? 's' : ''}`;
+            visOsRam.innerText = `${osRam} GB RAM`;
+            visNodeExecCount.innerText = `${execsPerNode} Executor${execsPerNode > 1 ? 's' : ''}`;
+
+            // Create Visualizer boxes for each executor on a Node
+            visExecutorsContainer.innerHTML = "";
+            if (execsPerNode === 0) {
+                visExecutorsContainer.innerHTML = `
+                    <div class="col-span-3 text-center border-2 border-dashed border-red-500/30 rounded-lg p-6 bg-red-500/5 text-red-300">
+                        <i class="fa-solid fa-face-frown text-2xl mb-2"></i>
+                        <h6 class="text-xs font-bold uppercase">Sizing Blocked!</h6>
+                        <p class="text-[10px] text-slate-400 mt-1">Cores per executor (${targetExecCores}) exceeds node availability (${availCoresNode}). Try decreasing "Cores per Executor" setting!</p>
+                    </div>
+                `;
+            } else {
+                for (let i = 1; i <= execsPerNode; i++) {
+                    const execBox = document.createElement('div');
+                    execBox.className = "bg-slate-900 border border-indigo-500/20 rounded-lg p-3 flex flex-col justify-between hover:border-indigo-500/50 transition duration-150";
+                    execBox.innerHTML = `
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
+                            <span class="text-[10px] font-bold text-slate-300">Executor #${i}</span>
+                            <span class="text-[9px] bg-indigo-500/10 text-indigo-400 px-1.5 py-0.2 rounded font-mono">ACTIVE</span>
+                        </div>
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between font-mono text-slate-400">
+                                <span>Co-Cores:</span>
+                                <span class="text-slate-200 font-bold">${targetExecCores} vCPUs</span>
+                            </div>
+                            <div class="flex justify-between font-mono text-slate-400">
+                                <span>Memory:</span>
+                                <span class="text-indigo-400 font-bold">${usableRamGb} GB</span>
+                            </div>
+                            <div class="flex justify-between font-mono text-slate-400">
+                                <span>Overhead:</span>
+                                <span class="text-pink-400">${computedOverheadGb} GB</span>
+                            </div>
+                        </div>
+                    `;
+                    visExecutorsContainer.appendChild(execBox);
+                }
+            }
+
+            // Show Wastage warning if wasted cores > 15% of node capacity
+            const coreWastagePercent = (wastedCoresPerNode / availCoresNode) * 100;
+            if (wastedCoresPerNode > 0 && coreWastagePercent >= 15) {
+                visWastageBanner.classList.remove('hidden');
+                visWastageBanner.innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 mt-0.5"></i>
+                    <span><strong>Resource Wastage Alert:</strong> ${wastedCoresPerNode} Cores (${coreWastagePercent.toFixed(0)}% of host) are wasted on each node due to poor sizing logic. Try reducing "Cores per Executor" to a divisor of node cores to improve efficiency!</span>
+                `;
+            } else {
+                visWastageBanner.classList.add('hidden');
+            }
+
+            // Visualizer bottom cluster footprints
+            visFootprintCores.innerText = `${concurrentSlots.toLocaleString()} Concurrent Threads`;
+            visFootprintRam.innerText = `${(finalExecs * usableRamGb).toLocaleString()} GB Allocated`;
+
+            const activeClusterCores = finalExecs * targetExecCores;
+            const rawClusterCores = numNodes * rawCores;
+            const clusterCoreEff = rawClusterCores > 0 ? (activeClusterCores / rawClusterCores) * 100 : 0;
+            visFootprintEfficiency.innerText = `${clusterCoreEff.toFixed(1)}% Core Efficiency`;
+
+            // Command template configurations
+            const driverMemory = Math.max(2, Math.floor(rawRam * 0.15)); // Allocate a proportional 15% to driver
+
+            terminalCode.innerText = `spark-submit \\
+  --class your.organization.main.EtlPipeline \\
+  --master yarn \\
+  --deploy-mode cluster \\
+  --num-executors ${finalExecs} \\
+  --executor-cores ${targetExecCores} \\
+  --executor-memory ${usableRamGb}g \\
+  --executor-memoryOverhead ${computedOverheadGb}g \\
+  --driver-memory ${driverMemory}g \\
+  --driver-cores 2 \\
+  --conf spark.serializer=org.apache.spark.serializer.KryoSerializer \\
+  --conf spark.sql.shuffle.partitions=${totalPartitionsCount > 100 ? totalPartitionsCount : 200} \\
+  --conf spark.dynamicAllocation.enabled=false \\
+  hdfs:///apps/deployments/your_etl_job.jar`;
+
+            // Build dynamic reasoning analysis text
+            let recommendationTextValue = `This configuration sets up a cluster with **${finalExecs} Spark Executors** matching host allocation topology. `;
+            if (wastedCoresPerNode > 0) {
+                recommendationTextValue += `Each node wastes ${wastedCoresPerNode} unused vCPUs. Consider adjusting Cores per Executor options. `;
+            } else {
+                recommendationTextValue += `This profile has achieved **100% Host allocation core density**. Zero unused vCPUs are left on physical node hosts! `;
+            }
+            recommendationTextValue += `The ${usableRamGb}g executor memory allocation combined with ${computedOverheadGb}g memory overhead safety buffer respects native OS boundaries and ensures dynamic memory workloads don't crash with JVM heap capacity overflow.`;
+            recommendationText.innerHTML = recommendationTextValue;
+        }
+
+        // Display toast alert window notification
+        function triggerToast(text) {
+            const toast = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+            toastText.innerText = text;
+
+            toast.className = "fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-0 opacity-100 transition duration-300 z-50 pointer-events-auto";
+
+            setTimeout(() => {
+                toast.className = "fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-24 opacity-0 transition duration-300 pointer-events-none z-50";
+            }, 3000);
+        }
+
+        // Copy button trigger using standard fallback compatibility parameters
+        copyBtn.addEventListener('click', () => {
+            const range = document.createRange();
+            range.selectNode(terminalCode);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+
+            try {
+                document.execCommand('copy');
+                triggerToast("Spark command copied directly to clipboard!");
+            } catch (err) {
+                triggerToast("Failed to copy command automatically. Please select text manually.");
+            }
+            window.getSelection().removeAllRanges();
+        });
+
+        // Initialize state configuration run on load
+        window.onload = function() {
+            updateTextValues();
+            updateCalculations();
+        };
+    </script>
+</body>
+</html>
