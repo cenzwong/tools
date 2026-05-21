@@ -722,7 +722,7 @@ spark-submit \
             let finalExecs = rawTotalExecs;
             if (yarnAllocationMode) {
                 // Reserve 1 executor for YARN Application Master if we have enough
-                finalExecs = Math.max(1, rawTotalExecs - 1);
+                finalExecs = Math.max(0, rawTotalExecs - 1);
             }
 
             wbS3ExecNode.innerHTML = `${availCoresNode} ÷ ${targetExecCores} = <strong class="text-slate-900">${execsPerNode} per Node</strong>`;
