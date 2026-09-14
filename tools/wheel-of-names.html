@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wheel of Names - URL Configurable Random Picker</title>
+  <meta name="description" content="Shareable and URL-driven Wheel of Names random picker tool for GitHub Pages.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎡</text></svg>">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+              900: '#4c1d95',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom styling for sleek wheel visuals */
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    textarea {
+      user-select: auto;
+      -webkit-user-select: auto;
+    }
+    /* Pointer arrow pulse animation */
+    @keyframes pointer-nudge {
+      0%, 100% { transform: translateY(-50%) translateX(0px); }
+      50% { transform: translateY(-50%) translateX(-4px); }
+    }
+    .pointer-pulse {
+      animation: pointer-nudge 1.2s infinite ease-in-out;
+    }
+    /* Modal backdrop blur transition */
+    .fade-in {
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .zoom-in {
+      animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes zoomIn {
+      from { opacity: 0; transform: scale(0.85); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    /* Custom scrollbar for names textarea */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.5);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 px-4 py-3 sm:px-6">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-pink-500 flex items-center justify-center shadow-lg shadow-brand-500/25">
+          <svg class="w-6 h-6 text-white transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+            Wheel of Names
+          </h1>
+          <p class="text-xs text-slate-400">Shareable & URL-driven for GitHub Pages</p>
+        </div>
+      </div>
+
+      <!-- Action items -->
+      <div class="flex items-center gap-2">
+        <button id="btnShareUrl" class="flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition shadow-sm active:scale-95">
+          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+          </svg>
+          <span>Copy URL</span>
+        </button>
+        <button id="btnSoundToggle" aria-label="Toggle Sound" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition active:scale-95">
+          <svg id="soundIconOn" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+          </svg>
+          <svg id="soundIconOff" class="w-5 h-5 text-slate-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+    <!-- LEFT / CENTER: Wheel Display Stage -->
+    <div class="lg:col-span-7 xl:col-span-8 flex flex-col items-center justify-center order-1 lg:order-1">
+      <!-- Wheel Canvas Container -->
+      <div class="relative w-full max-w-[500px] aspect-square flex items-center justify-center p-2">
+
+        <!-- Outer Glow Ring -->
+        <div class="absolute inset-4 rounded-full bg-gradient-to-tr from-brand-600/30 via-pink-600/20 to-blue-600/30 blur-2xl -z-10 pointer-events-none"></div>
+
+        <!-- Wheel Canvas -->
+        <canvas id="wheelCanvas" class="w-full h-full cursor-pointer touch-none drop-shadow-2xl rounded-full transition-transform active:scale-[0.99]"></canvas>
+
+        <!-- Right Pointer Indicator -->
+        <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-20 pointer-events-none pointer-pulse filter drop-shadow-md">
+          <svg class="w-9 h-9 text-amber-400 drop-shadow-[0_2px_8px_rgba(251,191,36,0.8)]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4 12l16-9v18z" />
+          </svg>
+        </div>
+
+        <!-- Center Spin Button Hub -->
+        <button id="btnSpinCenter" aria-label="Spin the wheel" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-b from-slate-800 to-slate-950 text-white font-extrabold text-sm sm:text-base tracking-wider uppercase shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_2px_4px_rgba(255,255,255,0.2)] border-4 border-slate-700 hover:border-brand-500 hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center group">
+          <span class="group-hover:text-brand-300 transition-colors">SPIN</span>
+          <span class="text-[9px] font-normal tracking-normal text-slate-400 mt-0.5">or Space</span>
+        </button>
+      </div>
+
+      <!-- Quick Wheel Status / Actions under wheel -->
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm">
+        <button id="btnSpinSecondary" class="px-6 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-brand-600/30 active:scale-95 transition">
+          Spin Wheel
+        </button>
+        <button id="btnShuffle" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl border border-slate-700 transition active:scale-95 flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span>Shuffle</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Config, Names Editor, and Speed Settings Panel -->
+    <aside class="lg:col-span-5 xl:col-span-4 flex flex-col gap-6 order-2 lg:order-2 w-full">
+
+      <!-- Speed & Duration Setting Card -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm">
+        <div class="flex items-center justify-between mb-3">
+          <label for="speedSlider" class="text-sm font-bold tracking-wide uppercase text-slate-300 flex items-center gap-2">
+            <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Spin Duration
+          </label>
+          <span id="speedValueBadge" class="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">
+            3s
+          </span>
+        </div>
+
+        <p class="text-xs text-slate-400 mb-3">
+          Controlled by URL parameter <code class="bg-slate-900 px-1.5 py-0.5 rounded text-brand-300 font-mono">?time=X</code>. Set to <strong class="text-slate-200">0</strong> for instantaneous pick.
+        </p>
+
+        <!-- Slider -->
+        <input id="speedSlider" type="range" min="0" max="15" step="0.5" value="3" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500 mb-3">
+
+        <!-- Quick Duration Preset Badges -->
+        <div class="grid grid-cols-4 gap-1.5 text-xs font-medium">
+          <button data-time="0" class="btnPresetTime py-1.5 rounded-lg bg-slate-900/60 hover:bg-brand-600 hover:text-white border border-slate-700 text-slate-300 transition text-center">
+            0s (Instant)
+          </button>
+          <button data-time="1" class="btnPresetTime py-1.5 rounded-lg bg-slate-900/60 hover:bg-brand-600 hover:text-white border border-slate-700 text-slate-300 transition text-center">
+            1s
+          </button>
+          <button data-time="3" class="btnPresetTime py-1.5 rounded-lg bg-slate-900/60 hover:bg-brand-600 hover:text-white border border-slate-700 text-slate-300 transition text-center">
+            3s
+          </button>
+          <button data-time="6" class="btnPresetTime py-1.5 rounded-lg bg-slate-900/60 hover:bg-brand-600 hover:text-white border border-slate-700 text-slate-300 transition text-center">
+            6s
+          </button>
+        </div>
+      </div>
+
+      <!-- Names List Editor Card -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-bold tracking-wide uppercase text-slate-300">Names List</h2>
+            <span id="nameCountBadge" class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+              0 names
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <button id="btnSortAZ" title="Sort Alphabetically" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition text-xs font-medium">
+              A-Z
+            </button>
+            <button id="btnClearNames" title="Clear all names" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-md transition text-xs">
+              Clear
+            </button>
+            <button id="btnSampleNames" title="Load sample names" class="p-1.5 text-slate-400 hover:text-brand-300 hover:bg-slate-700 rounded-md transition text-xs">
+              Sample
+            </button>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-400">
+          Enter one name per line. Saved automatically in the URL query parameter <code class="bg-slate-900 px-1.5 py-0.5 rounded text-brand-300 font-mono">?names=...</code>.
+        </p>
+
+        <!-- Names Textarea -->
+        <textarea id="namesTextarea" rows="9" class="w-full bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl p-3 text-sm font-mono text-slate-200 outline-none resize-y transition shadow-inner" placeholder="Alice&#10;Bob&#10;Charlie&#10;David"></textarea>
+
+        <!-- Options toggle -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-700/60 text-xs text-slate-300">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input id="chkRemoveOnWin" type="checkbox" class="w-4 h-4 rounded text-brand-600 bg-slate-900 border-slate-700 focus:ring-brand-500 cursor-pointer">
+            <span>Auto-remove winner after spin</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Winner History Drawer -->
+      <div class="bg-slate-800/50 border border-slate-700/60 rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Recent Picks</h3>
+          <button id="btnClearHistory" class="text-[11px] text-slate-500 hover:text-slate-300">Clear</button>
+        </div>
+        <div id="historyList" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+          <span class="text-xs text-slate-500 italic">No winners yet. Give the wheel a spin!</span>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Winner Announcement Modal -->
+  <div id="winnerModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hidden fade-in">
+    <div class="relative w-full max-w-md bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl text-center zoom-in overflow-hidden">
+
+      <!-- Ambient decorative glow -->
+      <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-48 h-48 bg-brand-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Trophy Icon -->
+      <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-600 flex items-center justify-center text-white shadow-xl shadow-amber-500/20 animate-bounce">
+        <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M5 3h14a1 1 0 011 1v4a6 6 0 01-5 5.91V17h2a2 2 0 012 2v2H5v-2a2 2 0 012-2h2v-3.09A6 6 0 014 8V4a1 1 0 011-1zm1 2v3a4 4 0 003.8 3.995L10 12h4a4 4 0 003.995-3.8L18 8V5H6zM2 6h2v2a5.99 5.99 0 001.5 3.97L4.7 13A8.005 8.005 0 012 8V6zm18 0h2v2a8.005 8.005 0 01-2.7 5l-.8-.03A5.99 5.99 0 0020 8V6z" />
+        </svg>
+      </div>
+
+      <h3 class="text-sm uppercase tracking-widest font-bold text-amber-400 mb-1">We Have A Winner!</h3>
+      <div id="winnerDisplay" class="text-3xl sm:text-4xl font-extrabold text-white my-3 break-words tracking-tight drop-shadow-md">
+        Winner Name
+      </div>
+      <p id="winnerSubtext" class="text-xs text-slate-400 mb-6">Selected randomly with complete fairness</p>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-2 justify-center">
+        <button id="btnModalClose" class="flex-1 px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold text-sm transition">
+          Spin Again
+        </button>
+        <button id="btnModalRemoveWinner" class="flex-1 px-4 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition shadow-lg shadow-rose-600/30">
+          Remove Name
+        </button>
+      </div>
+
+      <!-- Close corner button -->
+      <button id="btnModalX" aria-label="Close modal" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-lg">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Box (Alternative to alert) -->
+  <div id="toastBox" class="fixed bottom-5 right-5 z-50 transform translate-y-16 opacity-0 pointer-events-none transition-all duration-300 ease-out bg-slate-800 text-white border border-slate-700 rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3">
+    <div id="toastIcon" class="text-emerald-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </div>
+    <span id="toastMessage" class="text-sm font-medium">Link copied!</span>
+  </div>
+
+  <!-- Confetti Canvas for Victory Celebrations -->
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-40 hidden"></canvas>
+
+  <script>
+    /* Wheel of Names - Core Application Script */
+
+    // Default fallback names
+    const DEFAULT_NAMES = [
+      "Sophia",
+      "Alexander",
+      "Emma",
+      "Liam",
+      "Olivia",
+      "Noah",
+      "Ava",
+      "Lucas"
+    ];
+
+    // Vibrant segment colors (accessible high-contrast hues)
+    const PALETTE = [
+      "#ef4444", // Red
+      "#f97316", // Orange
+      "#f59e0b", // Amber
+      "#10b981", // Emerald
+      "#06b6d4", // Cyan
+      "#3b82f6", // Blue
+      "#8b5cf6", // Violet
+      "#ec4899", // Pink
+      "#14b8a6", // Teal
+      "#6366f1"  // Indigo
+    ];
+
+    // State Variables
+    let names = [];
+    let spinDuration = 3; // In seconds
+    let isSpinning = false;
+    let currentAngle = 0; // In radians
+    let soundEnabled = true;
+    let removeOnWin = false;
+    let recentWinners = [];
+    let currentWinner = null;
+
+    // DOM Elements
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const textarea = document.getElementById('namesTextarea');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedValueBadge = document.getElementById('speedValueBadge');
+    const nameCountBadge = document.getElementById('nameCountBadge');
+    const btnSpinCenter = document.getElementById('btnSpinCenter');
+    const btnSpinSecondary = document.getElementById('btnSpinSecondary');
+    const btnShuffle = document.getElementById('btnShuffle');
+    const btnSortAZ = document.getElementById('btnSortAZ');
+    const btnClearNames = document.getElementById('btnClearNames');
+    const btnSampleNames = document.getElementById('btnSampleNames');
+    const btnShareUrl = document.getElementById('btnShareUrl');
+    const btnSoundToggle = document.getElementById('btnSoundToggle');
+    const soundIconOn = document.getElementById('soundIconOn');
+    const soundIconOff = document.getElementById('soundIconOff');
+    const chkRemoveOnWin = document.getElementById('chkRemoveOnWin');
+    const historyList = document.getElementById('historyList');
+    const btnClearHistory = document.getElementById('btnClearHistory');
+    const winnerModal = document.getElementById('winnerModal');
+    const winnerDisplay = document.getElementById('winnerDisplay');
+    const btnModalClose = document.getElementById('btnModalClose');
+    const btnModalX = document.getElementById('btnModalX');
+    const btnModalRemoveWinner = document.getElementById('btnModalRemoveWinner');
+    const toastBox = document.getElementById('toastBox');
+    const toastMessage = document.getElementById('toastMessage');
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+
+    // Synthetic Audio without external audio files to prevent broken links
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // Wheel tick sound effect (short mechanical wood peg click)
+    function playTickSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctxAudio = getAudioContext();
+        if (!ctxAudio) return;
+        const osc = ctxAudio.createOscillator();
+        const gain = ctxAudio.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, ctxAudio.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, ctxAudio.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.18, ctxAudio.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctxAudio.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(ctxAudio.destination);
+        osc.start();
+        osc.stop(ctxAudio.currentTime + 0.04);
+      } catch (e) {
+        // Audio might be constrained until user gesture
+      }
+    }
+
+    // Fanfare chime when winner is chosen
+    function playVictorySound() {
+      if (!soundEnabled) return;
+      try {
+        const ctxAudio = getAudioContext();
+        if (!ctxAudio) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = ctxAudio.createOscillator();
+          const gain = ctxAudio.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctxAudio.currentTime + idx * 0.08);
+          gain.gain.setValueAtTime(0.12, ctxAudio.currentTime + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctxAudio.currentTime + idx * 0.08 + 0.5);
+          osc.connect(gain);
+          gain.connect(ctxAudio.destination);
+          osc.start(ctxAudio.currentTime + idx * 0.08);
+          osc.stop(ctxAudio.currentTime + idx * 0.08 + 0.5);
+        });
+      } catch (e) {}
+    }
+
+    // Parse URL query parameters to populate names and time
+    function parseUrlParameters() {
+      const params = new URLSearchParams(window.location.search);
+
+      // Names parsing
+      if (params.has('names')) {
+        const rawNames = params.get('names');
+        // Support comma-separated or pipe-separated
+        const splitNames = rawNames
+          .split(/[,|\n]/)
+          .map(n => n.trim())
+          .filter(n => n.length > 0);
+        if (splitNames.length > 0) {
+          names = splitNames;
+        } else {
+          names = [...DEFAULT_NAMES];
+        }
+      } else {
+        names = [...DEFAULT_NAMES];
+      }
+
+      // Spin duration parsing
+      if (params.has('time')) {
+        const parsedTime = parseFloat(params.get('time'));
+        if (!isNaN(parsedTime) && parsedTime >= 0) {
+          spinDuration = Math.min(Math.max(parsedTime, 0), 30);
+        }
+      }
+
+      // Auto-remove option
+      if (params.has('remove')) {
+        removeOnWin = params.get('remove') === '1' || params.get('remove') === 'true';
+      }
+
+      syncUiFromState();
+    }
+
+    // Sync active state back into URL query string without reloading page
+    let urlUpdateTimeout = null;
+    function updateUrlState() {
+      clearTimeout(urlUpdateTimeout);
+      urlUpdateTimeout = setTimeout(() => {
+        const url = new URL(window.location.href);
+
+        // Update names
+        if (names.length > 0) {
+          url.searchParams.set('names', names.join(','));
+        } else {
+          url.searchParams.delete('names');
+        }
+
+        // Update spin duration
+        url.searchParams.set('time', spinDuration.toString());
+
+        // Update remove flag if true
+        if (removeOnWin) {
+          url.searchParams.set('remove', '1');
+        } else {
+          url.searchParams.delete('remove');
+        }
+
+        window.history.replaceState({}, '', url.toString());
+      }, 250);
+    }
+
+    // Update form controls to match current state
+    function syncUiFromState() {
+      textarea.value = names.join('\n');
+      nameCountBadge.textContent = `${names.length} name${names.length === 1 ? '' : 's'}`;
+      speedSlider.value = spinDuration;
+      speedValueBadge.textContent = spinDuration === 0 ? 'Instant (0s)' : `${spinDuration}s`;
+      chkRemoveOnWin.checked = removeOnWin;
+      drawWheel();
+    }
+
+    // Resize canvas taking devicePixelRatio into account
+    function setupCanvasSize() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const size = Math.max(rect.width, 300);
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      ctx.resetTransform?.();
+      ctx.scale(dpr, dpr);
+      drawWheel();
+    }
+
+    // Draw the entire wheel at currentAngle
+    function drawWheel() {
+      const rect = canvas.getBoundingClientRect();
+      const size = Math.max(rect.width, 300);
+      const center = size / 2;
+      const radius = center - 8;
+
+      ctx.clearRect(0, 0, size, size);
+
+      if (names.length === 0) {
+        // Empty placeholder state
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(center, center, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#1e293b';
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#334155';
+        ctx.stroke();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Please add names to spin!', center, center);
+        ctx.restore();
+        return;
+      }
+
+      const totalSegments = names.length;
+      const arcSize = (2 * Math.PI) / totalSegments;
+
+      // Draw Segments
+      for (let i = 0; i < totalSegments; i++) {
+        const startAngle = currentAngle + i * arcSize;
+        const endAngle = startAngle + arcSize;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, startAngle, endAngle);
+        ctx.closePath();
+
+        // Fill segment color
+        const color = PALETTE[i % PALETTE.length];
+        ctx.fillStyle = color;
+        ctx.fill();
+
+        // Subtle slice border
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#0f172a';
+        ctx.stroke();
+
+        // Render Name text
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(startAngle + arcSize / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+
+        // Adjust font size dynamically based on segment count
+        let fontSize = Math.min(18, Math.max(11, Math.floor(340 / totalSegments)));
+        ctx.font = `700 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+
+        // Truncate long text
+        let text = names[i];
+        const maxTextWidth = radius * 0.65;
+        while (ctx.measureText(text).width > maxTextWidth && text.length > 3) {
+          text = text.slice(0, -2) + '…';
+        }
+
+        ctx.fillText(text, radius - 20, 0);
+        ctx.restore();
+        ctx.restore();
+      }
+
+      // Outer rim decorative border
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(center, center, radius, 0, 2 * Math.PI);
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#1e293b';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Determine winner under the right indicator (angle 0 rad in canvas)
+    function getWinnerIndex(angle) {
+      if (names.length === 0) return -1;
+      const totalSegments = names.length;
+      const arcSize = (2 * Math.PI) / totalSegments;
+      // Pointer is fixed at angle 0 (3 o'clock position on the right)
+      // Normalized angle relative to pointer
+      let normalizedAngle = (2 * Math.PI - (angle % (2 * Math.PI))) % (2 * Math.PI);
+      return Math.floor(normalizedAngle / arcSize) % totalSegments;
+    }
+
+    // Spin trigger
+    function spinWheel() {
+      if (isSpinning) return;
+      if (names.length === 0) {
+        showToast('Please add at least one name first!', true);
+        return;
+      }
+
+      isSpinning = true;
+      btnSpinCenter.disabled = true;
+      btnSpinSecondary.disabled = true;
+
+      // Pre-select winning index fairly
+      const winningIndex = Math.floor(Math.random() * names.length);
+      const totalSegments = names.length;
+      const arcSize = (2 * Math.PI) / totalSegments;
+
+      // Target segment angle center
+      const targetSegmentCenter = (totalSegments - winningIndex - 0.5) * arcSize;
+
+      // Check if Instantaneous Mode (time = 0)
+      if (spinDuration <= 0) {
+        currentAngle = targetSegmentCenter;
+        drawWheel();
+        finishSpin(names[winningIndex]);
+        return;
+      }
+
+      // Timed Mode (e.g. time = 1s, 3s, etc.)
+      const durationMs = spinDuration * 1000;
+      // Base full rotations proportional to duration (e.g., 2 to 8 rotations)
+      const baseRotations = Math.max(2, Math.round(spinDuration * 2));
+      const fullRotationsRad = baseRotations * 2 * Math.PI;
+
+      // Calculate total delta angle to land directly on target center
+      const currentNorm = currentAngle % (2 * Math.PI);
+      let deltaAngle = (targetSegmentCenter - currentNorm);
+      while (deltaAngle < 0) {
+        deltaAngle += 2 * Math.PI;
+      }
+      const totalSpinAngle = fullRotationsRad + deltaAngle;
+      const startAngle = currentAngle;
+      const startTime = performance.now();
+
+      let lastPegCrossed = -1;
+
+      // Animation frame loop using Cubic Ease-Out
+      function animateSpin(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / durationMs, 1);
+
+        // Cubic ease out formula: 1 - Math.pow(1 - progress, 3)
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        currentAngle = startAngle + totalSpinAngle * easeOut;
+
+        // Sound peg cross check
+        const currentSegment = getWinnerIndex(currentAngle);
+        if (currentSegment !== lastPegCrossed) {
+          playTickSound();
+          lastPegCrossed = currentSegment;
+        }
+
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animateSpin);
+        } else {
+          // Finished spin
+          finishSpin(names[winningIndex]);
+        }
+      }
+
+      requestAnimationFrame(animateSpin);
+    }
+
+    // Spin Completed Action
+    function finishSpin(winner) {
+      isSpinning = false;
+      btnSpinCenter.disabled = false;
+      btnSpinSecondary.disabled = false;
+      currentWinner = winner;
+
+      // Add to history
+      recentWinners.unshift({
+        name: winner,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+      renderHistory();
+
+      // Trigger Celebration
+      playVictorySound();
+      launchConfetti();
+      showWinnerModal(winner);
+
+      // Auto-remove if enabled
+      if (removeOnWin) {
+        const idx = names.indexOf(winner);
+        if (idx !== -1) {
+          names.splice(idx, 1);
+          syncUiFromState();
+          updateUrlState();
+        }
+      }
+    }
+
+    function showWinnerModal(winner) {
+      winnerDisplay.textContent = winner;
+      winnerModal.classList.remove('hidden');
+    }
+
+    function hideWinnerModal() {
+      winnerModal.classList.add('hidden');
+      stopConfetti();
+    }
+
+    // Confetti System
+    let confettiParticles = [];
+    let confettiAnimationId = null;
+
+    function launchConfetti() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+      confettiCanvas.classList.remove('hidden');
+
+      confettiParticles = [];
+      const colors = ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b'];
+      for (let i = 0; i < 90; i++) {
+        confettiParticles.push({
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 0.8) * 16,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 10,
+          gravity: 0.35,
+          alpha: 1
+        });
+      }
+
+      if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+      renderConfetti();
+    }
+
+    function renderConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      let aliveCount = 0;
+
+      for (let p of confettiParticles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.rotation += p.rotationSpeed;
+        p.alpha -= 0.008;
+
+        if (p.alpha > 0 && p.y < confettiCanvas.height) {
+          aliveCount++;
+          confettiCtx.save();
+          confettiCtx.translate(p.x, p.y);
+          confettiCtx.rotate((p.rotation * Math.PI) / 180);
+          confettiCtx.fillStyle = p.color;
+          confettiCtx.globalAlpha = Math.max(p.alpha, 0);
+          confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          confettiCtx.restore();
+        }
+      }
+
+      if (aliveCount > 0) {
+        confettiAnimationId = requestAnimationFrame(renderConfetti);
+      } else {
+        stopConfetti();
+      }
+    }
+
+    function stopConfetti() {
+      if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiCanvas.classList.add('hidden');
+    }
+
+    function renderHistory() {
+      if (recentWinners.length === 0) {
+        historyList.innerHTML = '<span class="text-xs text-slate-500 italic">No winners yet. Give the wheel a spin!</span>';
+        return;
+      }
+      historyList.innerHTML = recentWinners
+        .slice(0, 10)
+        .map(w => `<span class="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200 font-medium">${escapeHtml(w.name)}</span>`)
+        .join('');
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Custom Toast Notification
+    let toastTimeout = null;
+    function showToast(msg, isError = false) {
+      clearTimeout(toastTimeout);
+      toastMessage.textContent = msg;
+      const icon = document.getElementById('toastIcon');
+      if (isError) {
+        icon.innerHTML = '<svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+      } else {
+        icon.innerHTML = '<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+      }
+      toastBox.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+      toastTimeout = setTimeout(() => {
+        toastBox.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // Textarea input sync
+    textarea.addEventListener('input', (e) => {
+      const parsed = e.target.value
+        .split('\n')
+        .map(n => n.trim())
+        .filter(n => n.length > 0);
+      names = parsed;
+      nameCountBadge.textContent = `${names.length} name${names.length === 1 ? '' : 's'}`;
+      drawWheel();
+      updateUrlState();
+    });
+
+    // Speed Slider input sync
+    speedSlider.addEventListener('input', (e) => {
+      spinDuration = parseFloat(e.target.value);
+      speedValueBadge.textContent = spinDuration === 0 ? 'Instant (0s)' : `${spinDuration}s`;
+      updateUrlState();
+    });
+
+    // Preset Speed Buttons
+    document.querySelectorAll('.btnPresetTime').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const timeVal = parseFloat(btn.getAttribute('data-time'));
+        spinDuration = timeVal;
+        speedSlider.value = timeVal;
+        speedValueBadge.textContent = timeVal === 0 ? 'Instant (0s)' : `${timeVal}s`;
+        updateUrlState();
+        showToast(`Speed set to ${timeVal === 0 ? 'Instant' : timeVal + 's'}`);
+      });
+    });
+
+    // Remove on win checkbox
+    chkRemoveOnWin.addEventListener('change', (e) => {
+      removeOnWin = e.target.checked;
+      updateUrlState();
+    });
+
+    // Spin triggers
+    btnSpinCenter.addEventListener('click', spinWheel);
+    btnSpinSecondary.addEventListener('click', spinWheel);
+    canvas.addEventListener('click', spinWheel);
+
+    // Spacebar to spin
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && document.activeElement !== textarea) {
+        e.preventDefault();
+        spinWheel();
+      }
+    });
+
+    // Shuffle Names
+    btnShuffle.addEventListener('click', () => {
+      if (names.length <= 1) return;
+      for (let i = names.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [names[i], names[j]] = [names[j], names[i]];
+      }
+      syncUiFromState();
+      updateUrlState();
+      showToast('Names shuffled!');
+    });
+
+    // Sort A-Z
+    btnSortAZ.addEventListener('click', () => {
+      names.sort((a, b) => a.localeCompare(b));
+      syncUiFromState();
+      updateUrlState();
+      showToast('Sorted A to Z');
+    });
+
+    // Clear Names
+    btnClearNames.addEventListener('click', () => {
+      names = [];
+      syncUiFromState();
+      updateUrlState();
+      showToast('Names list cleared');
+    });
+
+    // Load Sample Names
+    btnSampleNames.addEventListener('click', () => {
+      names = [...DEFAULT_NAMES];
+      syncUiFromState();
+      updateUrlState();
+      showToast('Sample names loaded');
+    });
+
+    // Copy Shareable URL (uses execCommand copy fallback for iframe robustness)
+    btnShareUrl.addEventListener('click', () => {
+      const currentUrl = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentUrl).then(() => {
+          showToast('Shareable link copied to clipboard!');
+        }).catch(() => {
+          fallbackCopyText(currentUrl);
+        });
+      } else {
+        fallbackCopyText(currentUrl);
+      }
+    });
+
+    function fallbackCopyText(text) {
+      const tempInput = document.createElement('input');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        showToast('Shareable link copied to clipboard!');
+      } catch (err) {
+        showToast('Failed to copy URL', true);
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    // Sound Toggle
+    btnSoundToggle.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundIconOn.classList.toggle('hidden', !soundEnabled);
+      soundIconOff.classList.toggle('hidden', soundEnabled);
+      showToast(soundEnabled ? 'Sound enabled' : 'Sound muted');
+    });
+
+    // Clear Winner History
+    btnClearHistory.addEventListener('click', () => {
+      recentWinners = [];
+      renderHistory();
+    });
+
+    // Modal Events
+    btnModalClose.addEventListener('click', hideWinnerModal);
+    btnModalX.addEventListener('click', hideWinnerModal);
+    btnModalRemoveWinner.addEventListener('click', () => {
+      if (currentWinner) {
+        const idx = names.indexOf(currentWinner);
+        if (idx !== -1) {
+          names.splice(idx, 1);
+          syncUiFromState();
+          updateUrlState();
+          showToast(`Removed "${currentWinner}"`);
+        }
+      }
+      hideWinnerModal();
+    });
+
+    // Window Resize handling
+    window.addEventListener('resize', () => {
+      setupCanvasSize();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      parseUrlParameters();
+      setupCanvasSize();
+    });
+  </script>
+</body>
+</html>
