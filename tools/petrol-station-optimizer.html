@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Petrol Station Break-even Calculator</title>
+  <meta name="description" content="Calculate break-even distance and minimum spend when choosing between a nearby petrol station and a cheaper distant one." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛽</text></svg>">
+
+  <style>
+    :root {
+      color-scheme: light dark;
+
+      --bg: #f7f7f8;
+      --card: #ffffff;
+      --panel: #f2f4f7;
+      --text: #111827;
+      --muted: #667085;
+      --border: #d0d5dd;
+
+      --accent: #2563eb;
+      --green: #15803d;
+      --red: #b42318;
+      --amber: #b54708;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111318;
+        --card: #191c22;
+        --panel: #20242c;
+        --text: #f5f7fa;
+        --muted: #a8b0bd;
+        --border: #343a46;
+
+        --accent: #60a5fa;
+        --green: #4ade80;
+        --red: #fb7185;
+        --amber: #fbbf24;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+      line-height: 1.5;
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 30px auto 50px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 38px);
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      margin: 0 0 24px;
+      color: var(--muted);
+      max-width: 800px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.3fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 850px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .section-title {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    .section-description {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .two-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    input {
+      width: 100%;
+      min-width: 0;
+      height: 44px;
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: 16px;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+      outline-offset: 1px;
+    }
+
+    .unit {
+      color: var(--muted);
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .formula-box {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .formula-box strong {
+      color: var(--text);
+    }
+
+    .formula {
+      display: block;
+      margin: 8px 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .verdict {
+      margin-bottom: 16px;
+      background: var(--panel);
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    #verdictTitle {
+      margin: 3px 0;
+      font-size: 24px;
+      font-weight: 750;
+    }
+
+    #verdictText {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .good {
+      color: var(--green);
+    }
+
+    .bad {
+      color: var(--red);
+    }
+
+    .neutral {
+      color: var(--amber);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 700px) {
+      .metrics {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .metric {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric-value {
+      margin-top: 4px;
+      font-size: 16px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .chart-card {
+      overflow: hidden;
+    }
+
+    .chart-header {
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .chart-title {
+      font-weight: 700;
+    }
+
+    .chart-description {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .chart-container {
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-width: 560px;
+      height: auto;
+      cursor: crosshair;
+    }
+
+    svg .draggable-point {
+      cursor: grab;
+    }
+
+    svg .draggable-point:active {
+      cursor: grabbing;
+    }
+
+    .chart-scroll {
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+
+    .details {
+      margin-top: 16px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .details strong {
+      color: var(--text);
+    }
+
+    .error {
+      display: none;
+      padding: 10px 12px;
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      color: var(--red);
+      font-size: 14px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--card);
+      border-color: var(--accent);
+    }
+
+    .actions-row {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .toast {
+      font-size: 13px;
+      color: var(--green);
+      display: none;
+    }
+
+    .assumption {
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>⛽ Petrol Station Optimiser</h1>
+
+    <p class="subtitle">
+      Compare a nearby petrol station against a cheaper but farther-away station
+      and calculate the break-even distance and minimum worthwhile fill.
+    </p>
+
+    <div class="layout">
+      <!-- Inputs -->
+      <section class="card">
+        <h2 class="section-title">Your scenario</h2>
+
+        <p class="section-description">
+          Distance means the <strong>extra round-trip mileage</strong> required
+          to use Station B instead of Station A.
+        </p>
+
+        <form id="calculator" class="form-grid" novalidate onsubmit="return false;">
+          <div class="two-columns">
+            <label for="priceA">
+              Station A price
+              <div class="input-row">
+                <input
+                  id="priceA"
+                  type="number"
+                  min="1"
+                  step="0.1"
+                  value="139.9"
+                />
+                <span class="unit">p/L</span>
+              </div>
+            </label>
+
+            <label for="priceB">
+              Station B price
+              <div class="input-row">
+                <input
+                  id="priceB"
+                  type="number"
+                  min="1"
+                  step="0.1"
+                  value="134.9"
+                />
+                <span class="unit">p/L</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="two-columns">
+            <label for="mpg">
+              Vehicle efficiency
+              <div class="input-row">
+                <input
+                  id="mpg"
+                  type="number"
+                  min="1"
+                  step="0.1"
+                  value="60"
+                />
+                <span class="unit">UK mpg</span>
+              </div>
+            </label>
+
+            <label for="distance">
+              Extra distance to B
+              <div class="input-row">
+                <input
+                  id="distance"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value="4"
+                />
+                <span class="unit">miles</span>
+              </div>
+            </label>
+          </div>
+
+          <label for="spend">
+            Amount you plan to spend at Station B
+            <div class="input-row">
+              <span class="unit">£</span>
+              <input
+                id="spend"
+                type="number"
+                min="1"
+                step="1"
+                value="50"
+              />
+            </div>
+          </label>
+
+          <div id="error" class="error"></div>
+        </form>
+
+        <div class="actions-row">
+          <button id="shareBtn" class="btn" type="button">
+            🔗 Copy sharable link
+          </button>
+          <span id="toast" class="toast">Link copied to clipboard!</span>
+        </div>
+
+        <div class="formula-box">
+          <strong>Model</strong>
+
+          <span class="formula">
+            detour fuel = extra miles ÷ MPG × 4.54609
+          </span>
+
+          <span class="formula">
+            price saving = litres bought × (A price − B price)
+          </span>
+
+          Station B wins when the pump-price saving exceeds the fuel consumed
+          by the extra journey.
+
+          <div class="assumption">
+            This version considers fuel cost only. It does not include tyre
+            wear, depreciation, maintenance or the value of your time.
+          </div>
+        </div>
+      </section>
+
+      <!-- Outputs -->
+      <div>
+        <section class="card verdict">
+          <div class="eyebrow">Best choice</div>
+          <div id="verdictTitle">—</div>
+          <div id="verdictText">—</div>
+        </section>
+
+        <section class="metrics">
+          <div class="metric">
+            <div class="metric-label">Price difference</div>
+            <div id="priceDifference" class="metric-value">—</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Detour fuel cost</div>
+            <div id="detourCost" class="metric-value">—</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Break-even spend</div>
+            <div id="breakEvenSpend" class="metric-value">—</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Max extra distance</div>
+            <div id="maxDistance" class="metric-value">—</div>
+          </div>
+        </section>
+
+        <section class="card chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Break-even frontier</div>
+              <div class="chart-description">
+                X-axis = extra distance. Y-axis = spend at B.
+                <strong>Click or drag the point</strong> on the chart to adjust your scenario. Values snap to whole numbers.
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-scroll">
+            <div class="chart-container">
+              <svg
+                id="chart"
+                viewBox="0 0 700 390"
+                aria-label="Break-even chart"
+              ></svg>
+            </div>
+          </div>
+        </section>
+
+        <section id="details" class="card details"></section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const UK_GALLON_LITRES = 4.54609;
+
+      const priceAInput = document.getElementById("priceA");
+      const priceBInput = document.getElementById("priceB");
+      const mpgInput = document.getElementById("mpg");
+      const distanceInput = document.getElementById("distance");
+      const spendInput = document.getElementById("spend");
+
+      const errorBox = document.getElementById("error");
+
+      const verdictTitle = document.getElementById("verdictTitle");
+      const verdictText = document.getElementById("verdictText");
+
+      const priceDifferenceEl = document.getElementById("priceDifference");
+      const detourCostEl = document.getElementById("detourCost");
+      const breakEvenSpendEl = document.getElementById("breakEvenSpend");
+      const maxDistanceEl = document.getElementById("maxDistance");
+
+      const detailsEl = document.getElementById("details");
+      const chart = document.getElementById("chart");
+
+      const shareBtn = document.getElementById("shareBtn");
+      const toast = document.getElementById("toast");
+
+      // Current chart axis limits for drag translation
+      let currentMaxX = 10;
+      let currentMaxY = 60;
+      const W = 700;
+      const H = 390;
+      const margin = { left: 72, right: 26, top: 28, bottom: 58 };
+      const innerWidth = W - margin.left - margin.right;
+      const innerHeight = H - margin.top - margin.bottom;
+
+      let isDragging = false;
+
+      function money(value) {
+        return `£${value.toFixed(2)}`;
+      }
+
+      function value(input) {
+        return Number.parseFloat(input.value);
+      }
+
+      function getCSS(name) {
+        return getComputedStyle(document.documentElement)
+          .getPropertyValue(name)
+          .trim();
+      }
+
+      function updateURLHash() {
+        const params = new URLSearchParams({
+          pa: priceAInput.value,
+          pb: priceBInput.value,
+          mpg: mpgInput.value,
+          d: distanceInput.value,
+          s: spendInput.value
+        });
+        history.replaceState(null, "", "#" + params.toString());
+      }
+
+      function restoreFromHash() {
+        if (!location.hash) return;
+        const params = new URLSearchParams(location.hash.slice(1));
+        if (params.has("pa")) priceAInput.value = params.get("pa");
+        if (params.has("pb")) priceBInput.value = params.get("pb");
+        if (params.has("mpg")) mpgInput.value = params.get("mpg");
+        if (params.has("d")) distanceInput.value = params.get("d");
+        if (params.has("s")) spendInput.value = params.get("s");
+      }
+
+      function calculate() {
+        const priceA = value(priceAInput);
+        const priceB = value(priceBInput);
+        const mpg = value(mpgInput);
+        const extraDistance = value(distanceInput);
+        const spend = value(spendInput);
+
+        const values = [priceA, priceB, mpg, extraDistance, spend];
+
+        if (
+          !values.every(Number.isFinite) ||
+          priceA <= 0 ||
+          priceB <= 0 ||
+          mpg <= 0 ||
+          extraDistance < 0 ||
+          spend <= 0
+        ) {
+          errorBox.style.display = "block";
+          errorBox.textContent = "Please enter valid positive values.";
+          return;
+        }
+
+        errorBox.style.display = "none";
+
+        const priceDifferencePence = priceA - priceB;
+        const litresPurchased = spend / (priceB / 100);
+        const grossSaving = litresPurchased * (priceDifferencePence / 100);
+        const detourLitres = (extraDistance / mpg) * UK_GALLON_LITRES;
+        const detourCost = detourLitres * (priceB / 100);
+        const netSaving = grossSaving - detourCost;
+        const costPerExtraMile = (UK_GALLON_LITRES / mpg) * (priceB / 100);
+
+        let breakEvenSpend = null;
+        let maxExtraDistance = null;
+
+        if (priceDifferencePence > 0) {
+          breakEvenSpend = (detourCost * priceB) / priceDifferencePence;
+          maxExtraDistance = grossSaving / costPerExtraMile;
+        }
+
+        updateMetrics({
+          priceDifferencePence,
+          detourCost,
+          breakEvenSpend,
+          maxExtraDistance
+        });
+
+        updateVerdict({
+          priceDifferencePence,
+          netSaving
+        });
+
+        updateDetails({
+          priceA,
+          priceB,
+          mpg,
+          extraDistance,
+          spend,
+          litresPurchased,
+          grossSaving,
+          detourLitres,
+          detourCost,
+          netSaving,
+          breakEvenSpend,
+          maxExtraDistance,
+          priceDifferencePence
+        });
+
+        drawChart({
+          priceA,
+          priceB,
+          mpg,
+          extraDistance,
+          spend,
+          breakEvenSpend,
+          maxExtraDistance,
+          priceDifferencePence
+        });
+
+        updateURLHash();
+      }
+
+      function updateMetrics({
+        priceDifferencePence,
+        detourCost,
+        breakEvenSpend,
+        maxExtraDistance
+      }) {
+        if (priceDifferencePence > 0) {
+          priceDifferenceEl.textContent = `${priceDifferencePence.toFixed(1)}p/L cheaper at B`;
+        } else if (priceDifferencePence < 0) {
+          priceDifferenceEl.textContent = `${Math.abs(priceDifferencePence).toFixed(1)}p/L dearer at B`;
+        } else {
+          priceDifferenceEl.textContent = "Same price";
+        }
+
+        detourCostEl.textContent = money(detourCost);
+
+        breakEvenSpendEl.textContent =
+          breakEvenSpend === null ? "Never" : money(breakEvenSpend);
+
+        maxDistanceEl.textContent =
+          maxExtraDistance === null
+            ? "0 miles"
+            : `${maxExtraDistance.toFixed(1)} miles`;
+      }
+
+      function updateVerdict({ priceDifferencePence, netSaving }) {
+        verdictTitle.className = "";
+
+        if (priceDifferencePence < 0) {
+          verdictTitle.textContent = "Station A wins";
+          verdictTitle.classList.add("bad");
+          verdictText.textContent =
+            "Station B is both more expensive per litre and farther away, so there is no fuel-cost break-even point.";
+          return;
+        }
+
+        if (priceDifferencePence === 0) {
+          verdictTitle.textContent = "Station A wins";
+          verdictTitle.classList.add("neutral");
+          verdictText.textContent =
+            "Both stations charge the same price, so any additional journey to Station B makes B more expensive.";
+          return;
+        }
+
+        if (netSaving > 0.005) {
+          verdictTitle.textContent = `Station B saves ${money(netSaving)}`;
+          verdictTitle.classList.add("good");
+          verdictText.textContent =
+            "The cheaper pump price more than pays for the additional fuel used reaching Station B.";
+        } else if (netSaving < -0.005) {
+          verdictTitle.textContent = `Station A saves ${money(Math.abs(netSaving))}`;
+          verdictTitle.classList.add("bad");
+          verdictText.textContent =
+            "Station B is cheaper per litre, but the fill is not large enough to pay for the detour.";
+        } else {
+          verdictTitle.textContent = "Approximately break-even";
+          verdictTitle.classList.add("neutral");
+          verdictText.textContent =
+            "The fuel-price saving is approximately equal to the fuel consumed by the detour.";
+        }
+      }
+
+      function updateDetails(data) {
+        if (data.priceDifferencePence <= 0) {
+          detailsEl.innerHTML = `
+            <strong>There is no break-even point.</strong><br><br>
+            Station A costs <strong>${data.priceA.toFixed(1)}p/L</strong>,
+            while Station B costs <strong>${data.priceB.toFixed(1)}p/L</strong>.
+            Because Station B is not cheaper and also requires extra driving,
+            increasing the amount of fuel you buy cannot make Station B cheaper on fuel cost alone.
+          `;
+          return;
+        }
+
+        detailsEl.innerHTML = `
+          <strong>For this journey:</strong><br><br>
+          Spending <strong>${money(data.spend)}</strong> at Station B buys approximately
+          <strong>${data.litresPurchased.toFixed(1)} litres</strong>.
+          <br><br>
+          The lower pump price saves <strong>${money(data.grossSaving)}</strong> before considering the journey.
+          <br><br>
+          Driving the extra <strong>${data.extraDistance.toFixed(1)} miles</strong> uses approximately
+          <strong>${data.detourLitres.toFixed(2)} litres</strong>, costing <strong>${money(data.detourCost)}</strong>.
+          <br><br>
+          At this distance, you need to buy approximately <strong>${money(data.breakEvenSpend)}</strong> of fuel before Station B becomes worthwhile.
+          <br><br>
+          Alternatively, for a <strong>${money(data.spend)}</strong> fill, Station B can be up to approximately
+          <strong>${data.maxExtraDistance.toFixed(1)} extra miles</strong> away before the saving disappears.
+        `;
+      }
+
+      function drawChart(data) {
+        let maxX = Math.max(
+          10,
+          data.extraDistance * 1.5,
+          data.maxExtraDistance ? data.maxExtraDistance * 1.2 : 10
+        );
+        maxX = Math.ceil(maxX / 5) * 5;
+
+        let maxY = Math.max(
+          60,
+          data.spend * 1.5,
+          data.breakEvenSpend ? data.breakEvenSpend * 1.3 : 60
+        );
+        maxY = Math.ceil(maxY / 20) * 20;
+
+        maxX = Math.min(maxX, 500);
+        maxY = Math.min(maxY, 2000);
+
+        currentMaxX = maxX;
+        currentMaxY = maxY;
+
+        const scaleX = x => margin.left + (x / maxX) * innerWidth;
+        const scaleY = y => margin.top + innerHeight - (y / maxY) * innerHeight;
+
+        const text = getCSS("--text");
+        const muted = getCSS("--muted");
+        const border = getCSS("--border");
+        const accent = getCSS("--accent");
+        const green = getCSS("--green");
+
+        let svg = "";
+
+        // Grid and X axis
+        for (let i = 0; i <= 5; i++) {
+          const xValue = (maxX / 5) * i;
+          const x = scaleX(xValue);
+
+          svg += `
+            <line
+              x1="${x}"
+              y1="${margin.top}"
+              x2="${x}"
+              y2="${margin.top + innerHeight}"
+              stroke="${border}"
+              stroke-width="1"
+              opacity="0.55"
+            />
+            <text
+              x="${x}"
+              y="${H - 30}"
+              fill="${muted}"
+              font-size="12"
+              text-anchor="middle"
+            >
+              ${xValue.toFixed(xValue < 10 ? 1 : 0)}
+            </text>
+          `;
+        }
+
+        // Grid and Y axis
+        for (let i = 0; i <= 4; i++) {
+          const yValue = (maxY / 4) * i;
+          const y = scaleY(yValue);
+
+          svg += `
+            <line
+              x1="${margin.left}"
+              y1="${y}"
+              x2="${margin.left + innerWidth}"
+              y2="${y}"
+              stroke="${border}"
+              stroke-width="1"
+              opacity="0.55"
+            />
+            <text
+              x="${margin.left - 10}"
+              y="${y + 4}"
+              fill="${muted}"
+              font-size="12"
+              text-anchor="end"
+            >
+              £${Math.round(yValue)}
+            </text>
+          `;
+        }
+
+        // Axis labels
+        svg += `
+          <text
+            x="${margin.left + innerWidth / 2}"
+            y="${H - 5}"
+            fill="${muted}"
+            font-size="13"
+            text-anchor="middle"
+          >
+            Extra round-trip distance to Station B (miles)
+          </text>
+
+          <text
+            x="17"
+            y="${margin.top + innerHeight / 2}"
+            fill="${muted}"
+            font-size="13"
+            text-anchor="middle"
+            transform="rotate(-90 17 ${margin.top + innerHeight / 2})"
+          >
+            Amount spent at Station B (£)
+          </text>
+        `;
+
+        // Draw break-even frontier only if B is cheaper
+        if (data.priceDifferencePence > 0) {
+          const costPerExtraMile = (UK_GALLON_LITRES / data.mpg) * (data.priceB / 100);
+          const spendPerMile = (costPerExtraMile * data.priceB) / data.priceDifferencePence;
+
+          let endX = maxX;
+          let endY = spendPerMile * endX;
+
+          if (endY > maxY) {
+            endY = maxY;
+            endX = maxY / spendPerMile;
+          }
+
+          const lineX1 = scaleX(0);
+          const lineY1 = scaleY(0);
+          const lineX2 = scaleX(endX);
+          const lineY2 = scaleY(endY);
+
+          // Shade profitable area: above break-even line
+          svg += `
+            <path
+              d="
+                M ${margin.left} ${margin.top}
+                L ${margin.left + innerWidth} ${margin.top}
+                L ${margin.left + innerWidth} ${lineY2}
+                L ${lineX2} ${lineY2}
+                L ${lineX1} ${lineY1}
+                Z
+              "
+              fill="${green}"
+              opacity="0.08"
+            />
+          `;
+
+          svg += `
+            <line
+              x1="${lineX1}"
+              y1="${lineY1}"
+              x2="${lineX2}"
+              y2="${lineY2}"
+              stroke="${text}"
+              stroke-width="2"
+              stroke-dasharray="7 5"
+            />
+
+            <text
+              x="${Math.min(lineX2 - 8, margin.left + innerWidth - 8)}"
+              y="${Math.max(lineY2 - 10, margin.top + 16)}"
+              fill="${text}"
+              font-size="12"
+              text-anchor="end"
+            >
+              Break-even
+            </text>
+
+            <text
+              x="${margin.left + 14}"
+              y="${margin.top + 20}"
+              fill="${green}"
+              font-size="12"
+              font-weight="600"
+            >
+              Station B cheaper overall
+            </text>
+          `;
+        }
+
+        // Current scenario dot
+        const currentX = scaleX(Math.min(data.extraDistance, maxX));
+        const currentY = scaleY(Math.min(data.spend, maxY));
+
+        svg += `
+          <line
+            x1="${currentX}"
+            y1="${margin.top}"
+            x2="${currentX}"
+            y2="${margin.top + innerHeight}"
+            stroke="${accent}"
+            stroke-width="1"
+            opacity="0.35"
+          />
+
+          <line
+            x1="${margin.left}"
+            y1="${currentY}"
+            x2="${margin.left + innerWidth}"
+            y2="${currentY}"
+            stroke="${accent}"
+            stroke-width="1"
+            opacity="0.35"
+          />
+
+          <g class="draggable-point" id="pointGroup">
+            <circle
+              cx="${currentX}"
+              cy="${currentY}"
+              r="14"
+              fill="${accent}"
+              opacity="0.2"
+            />
+            <circle
+              cx="${currentX}"
+              cy="${currentY}"
+              r="7"
+              fill="${accent}"
+              stroke="${text}"
+              stroke-width="2"
+            />
+          </g>
+
+          <text
+            x="${currentX + 12}"
+            y="${currentY - 12}"
+            fill="${text}"
+            font-size="12"
+            font-weight="700"
+            style="pointer-events: none;"
+          >
+            Your fill (£${Math.round(data.spend)}, ${Math.round(data.extraDistance)} mi)
+          </text>
+        `;
+
+        chart.innerHTML = svg;
+      }
+
+      function handleChartInteraction(e) {
+        const rect = chart.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        if (clientX === undefined || clientY === undefined) return;
+
+        // Convert client coordinates to SVG viewBox coordinates
+        const svgX = ((clientX - rect.left) / rect.width) * W;
+        const svgY = ((clientY - rect.top) / rect.height) * H;
+
+        // Clamp SVG coordinates to inner chart plot area
+        const clampedSvgX = Math.max(margin.left, Math.min(margin.left + innerWidth, svgX));
+        const clampedSvgY = Math.max(margin.top, Math.min(margin.top + innerHeight, svgY));
+
+        // Map SVG coordinates to numerical values
+        const rawDistance = ((clampedSvgX - margin.left) / innerWidth) * currentMaxX;
+        const rawSpend = ((margin.top + innerHeight - clampedSvgY) / innerHeight) * currentMaxY;
+
+        // Snap to nearest whole numbers
+        const snappedDistance = Math.max(0, Math.round(rawDistance));
+        const snappedSpend = Math.max(1, Math.round(rawSpend));
+
+        distanceInput.value = snappedDistance;
+        spendInput.value = snappedSpend;
+
+        calculate();
+      }
+
+      // Chart pointer / touch events
+      chart.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        handleChartInteraction(e);
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+          e.preventDefault();
+          handleChartInteraction(e);
+        }
+      });
+
+      window.addEventListener("mouseup", () => {
+        isDragging = false;
+      });
+
+      chart.addEventListener("touchstart", (e) => {
+        isDragging = true;
+        handleChartInteraction(e);
+      }, { passive: true });
+
+      window.addEventListener("touchmove", (e) => {
+        if (isDragging) {
+          handleChartInteraction(e);
+        }
+      }, { passive: true });
+
+      window.addEventListener("touchend", () => {
+        isDragging = false;
+      });
+
+      [
+        priceAInput,
+        priceBInput,
+        mpgInput,
+        distanceInput,
+        spendInput
+      ].forEach((input) => {
+        input.addEventListener("input", calculate);
+      });
+
+      shareBtn.addEventListener("click", async () => {
+        const url = location.href;
+        try {
+          await navigator.clipboard.writeText(url);
+          toast.style.display = "inline";
+          setTimeout(() => {
+            toast.style.display = "none";
+          }, 2000);
+        } catch {
+          prompt("Copy this link:", url);
+        }
+      });
+
+      const colourScheme = window.matchMedia("(prefers-color-scheme: dark)");
+      colourScheme.addEventListener?.("change", calculate);
+
+      restoreFromHash();
+      calculate();
+    })();
+  </script>
+</body>
+</html>
