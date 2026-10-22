@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GPS Speedometer & Telemetry Dashboard</title>
+  <meta name="description" content="Mobile-first real-time GPS speedometer, G-force telemetry, altitude, heading, and trip tracker for web browser.">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="status-badge">
+        <div id="gps-status-dot" class="status-dot"></div>
+        <span id="gps-status-text">GPS ● Waiting</span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-unit-toggle" class="icon-btn" aria-label="Toggle Speed Units">KM/H</button>
+        <button id="btn-settings" class="icon-btn" aria-label="Settings">⚙️</button>
+      </div>
+    </header>
+
+    <!-- Start Screen -->
+    <section id="start-screen" class="screen">
+      <div class="hero-card">
+        <div class="hero-icon">🏎️</div>
+        <h1 class="hero-title">GPS Speedometer</h1>
+        <p class="hero-desc">
+          Real-time driving telemetry powered by your phone's sensors.
+          No account or server required.
+        </p>
+        <button id="btn-start-dashboard" class="btn-primary">Start Dashboard</button>
+        <button id="btn-start-demo" class="btn-secondary">Demo / Simulation Mode</button>
+      </div>
+    </section>
+
+    <!-- Dashboard Screen -->
+    <section id="dashboard-screen" class="screen hidden">
+      <!-- Speedometer Gauge -->
+      <div class="speedometer-card">
+        <div class="gauge-container">
+          <svg class="gauge-svg" viewBox="0 0 200 200">
+            <!-- Background Dial Arc (240 deg sweep) -->
+            <path d="M 30,135 A 80,80 0 1,1 170,135" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round"/>
+            <!-- Active Progress Arc -->
+            <path id="gauge-arc-progress" d="M 30,135 A 80,80 0 1,1 170,135" fill="none" stroke="url(#arc-gradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="335.1" stroke-dashoffset="335.1"/>
+
+            <defs>
+              <linearGradient id="arc-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00f2fe" />
+                <stop offset="100%" stop-color="#4facfe" />
+              </linearGradient>
+            </defs>
+
+            <!-- Ticks group -->
+            <g id="gauge-ticks"></g>
+
+            <!-- Needle -->
+            <line id="gauge-needle" x1="100" y1="100" x2="100" y2="35" stroke="#00f2fe" stroke-width="3" stroke-linecap="round" transform="rotate(-210 100 100)"/>
+            <circle cx="100" cy="100" r="6" fill="#00f2fe" />
+          </svg>
+        </div>
+
+        <div class="digital-speed-display">
+          <div id="digital-speed" class="speed-number">0</div>
+          <div id="speed-unit-label" class="speed-unit">km/h</div>
+        </div>
+      </div>
+
+      <!-- Telemetry Grid -->
+      <div class="telemetry-grid">
+        <div class="tele-card">
+          <span class="tele-label">Heading</span>
+          <span id="val-heading" class="tele-val">—</span>
+          <span id="val-heading-cardinal" class="tele-sub">—</span>
+        </div>
+        <div class="tele-card">
+          <span class="tele-label">Altitude</span>
+          <span id="val-altitude" class="tele-val">—</span>
+          <span class="tele-sub">MSL</span>
+        </div>
+        <div class="tele-card">
+          <span class="tele-label">Accuracy</span>
+          <span id="val-accuracy" class="tele-val">—</span>
+          <span id="val-accuracy-label" class="tele-sub">—</span>
+        </div>
+      </div>
+
+      <!-- G-Force & Motion Grid -->
+      <div class="telemetry-grid">
+        <div class="tele-card">
+          <span class="tele-label">Accel / Brake</span>
+          <span id="val-accel" class="tele-val">0.00 g</span>
+          <span class="tele-sub">Longitudinal</span>
+        </div>
+        <div class="tele-card">
+          <span class="tele-label">Lateral G</span>
+          <span id="val-lateral-g" class="tele-val">0.00 g</span>
+          <span class="tele-sub">Cornering</span>
+        </div>
+        <div class="tele-card">
+          <span class="tele-label">Calibration</span>
+          <button id="btn-calibrate" class="icon-btn" style="width:100%; margin-top:4px;">Calibrate</button>
+        </div>
+      </div>
+
+      <!-- Visualisations: G-Force plot & Speed history -->
+      <div class="viz-row">
+        <div class="viz-card">
+          <span class="viz-title">G-Force Plot</span>
+          <canvas id="canvas-gforce" width="160" height="160"></canvas>
+        </div>
+        <div class="viz-card">
+          <span class="viz-title">60s Speed</span>
+          <canvas id="canvas-speed-history" width="160" height="160"></canvas>
+        </div>
+      </div>
+
+      <!-- Trip Statistics Cards -->
+      <div class="telemetry-grid">
+        <div class="tele-card">
+          <span class="tele-label">Max Speed</span>
+          <span id="val-max-speed" class="tele-val">0 km/h</span>
+        </div>
+        <div class="tele-card">
+          <span class="tele-label">Avg Speed</span>
+          <span id="val-avg-speed" class="tele-val">0 km/h</span>
+        </div>
+        <div class="tele-card">
+          <span class="tele-label">Distance</span>
+          <span id="val-trip-distance" class="tele-val">0.0 km</span>
+        </div>
+      </div>
+
+      <div class="telemetry-grid">
+        <div class="tele-card" style="grid-column: span 2;">
+          <span class="tele-label">Elapsed Time</span>
+          <span id="val-trip-duration" class="tele-val">00:00:00</span>
+        </div>
+        <div class="tele-card" style="grid-column: span 1; justify-content: center;">
+          <button id="btn-reset-trip" class="icon-btn" style="width:100%;">Reset</button>
+        </div>
+      </div>
+
+      <!-- Trip Control -->
+      <div class="trip-controls">
+        <button id="btn-trip" class="btn-primary">Start Trip</button>
+      </div>
+    </section>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">Settings</h2>
+          <button id="btn-close-settings" class="icon-btn">✕</button>
+        </div>
+
+        <div class="setting-row">
+          <label for="setting-unit">Speed Unit</label>
+          <select id="setting-unit">
+            <option value="kmh">km/h</option>
+            <option value="mph">mph</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <label for="setting-max-gauge">Gauge Max Speed</label>
+          <select id="setting-max-gauge">
+            <option value="120">120</option>
+            <option value="160">160</option>
+            <option value="200">200</option>
+            <option value="240">240</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <label for="setting-smoothing">Speed Smoothing</label>
+          <select id="setting-smoothing">
+            <option value="low">Low (3 samples)</option>
+            <option value="medium">Medium (5 samples)</option>
+            <option value="high">High (8 samples)</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <label for="setting-wakelock">Keep Screen Awake</label>
+          <input type="checkbox" id="setting-wakelock" checked>
+        </div>
+
+        <div class="setting-row">
+          <label for="setting-motion">Motion Sensors</label>
+          <input type="checkbox" id="setting-motion" checked>
+        </div>
+
+        <div class="privacy-notice">
+          🔒 Privacy Notice: All GPS and sensor data are processed strictly on your device and are never transmitted anywhere.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
