@@ -46,7 +46,7 @@
   <div class="wrap">
     <div id="status" class="muted" style="margin:8px 0 14px;">Loading…</div>
     <div id="list" class="grid" aria-live="polite"></div>
-    <div id="empty" class="empty" style="display:none">No <code>tools/*.html</code> files found.</div>
+    <div id="empty" class="empty" style="display:none">No tools found in <code>tools/</code>.</div>
   </div>
 </main>
 
@@ -86,16 +86,17 @@
       $empty.style.display="none";
       for(const it of state.filtered){
         const id = `chk_${it.name.replace(/\W/g,'_')}`;
+        const rawBtn = it.raw ? `<a class="linkbtn" href="${it.raw}" target="_blank" rel="noopener">Raw</a>` : '';
         const card = document.createElement('div');
         card.className = "card";
         card.innerHTML = `
           <input class="checkbox" type="checkbox" id="${id}" ${state.selected.has(it.path)?'checked':''}/>
           <div style="flex:1">
             <h3>${it.title} <span class="badge">${it.name}</span></h3>
-            <p class="muted">Single-file tool</p>
+            <p class="muted">${it.typeLabel}</p>
             <div class="toolsbar">
               <a class="linkbtn" href="${it.href}" target="_blank" rel="noopener">Open</a>
-              <a class="linkbtn" href="${it.raw}" target="_blank" rel="noopener">Raw</a>
+              ${rawBtn}
             </div>
           </div>`;
         card.querySelector('input').addEventListener('change',e=>{
@@ -108,12 +109,17 @@
   }
 
   function inflate(files){
-    const htmls = files.filter(f => f.type==='file' && /\.html?$/i.test(f.name) && !/^index\.html?$/i.test(f.name));
-    state.items = htmls.map(f=>{
+    const validItems = files.filter(f =>
+      (f.type === 'file' && /\.html?$/i.test(f.name) && !/^index\.html?$/i.test(f.name)) ||
+      (f.type === 'dir')
+    );
+    state.items = validItems.map(f=>{
+      const isDir = f.type === 'dir';
       const title = toTitle(f.name);
-      const href = webToolsBase + encodeURIComponent(f.name);
-      const raw = f.download_url || (f.html_url ? f.html_url.replace('github.com','raw.githubusercontent.com').replace('/blob/','/') : '');
-      return { name:f.name, title, path:f.path, href, raw };
+      const href = isDir ? `${webToolsBase}${encodeURIComponent(f.name)}/` : `${webToolsBase}${encodeURIComponent(f.name)}`;
+      const raw = isDir ? '' : (f.download_url || (f.html_url ? f.html_url.replace('github.com','raw.githubusercontent.com').replace('/blob/','/') : ''));
+      const typeLabel = isDir ? 'multi-file tool' : 'single-file tool';
+      return { name:f.name, title, path:f.path, href, raw, typeLabel };
     }).sort((a,b)=> a.title.localeCompare(b.title));
     render();
   }
